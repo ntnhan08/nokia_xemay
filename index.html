@@ -3,1841 +3,1582 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Nokia TA-1174 × ESP32-C3 — Remote Moto</title>
+<title>Nokia × ESP32-C3 — Circuit</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Oswald:wght@400;600;700&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Oswald:wght@500;700&display=swap');
 :root{
-  --bg:#05080f;
-  --bg2:#080c16;
-  --bg3:#0b1020;
-  --border:#162040;
-  --border2:#1e3060;
-  --green:#00ff88;
-  --green2:#00cc66;
-  --cyan:#00c8ff;
-  --cyan2:#0088cc;
-  --red:#ff2255;
-  --orange:#ff7a00;
-  --yellow:#ffc400;
-  --blue:#3b82f6;
-  --purple:#a855f7;
-  --text:#8ab0d0;
-  --text2:#4a7090;
-  --text3:#1e3a58;
+  --bg:#04060c;--bg2:#070a14;--bg3:#09101e;
+  --panel:#0b1220;--border:#162038;
+  --green:#00ff88;--green2:#00cc66;
+  --cyan:#00c8ff;--cyan2:#0088bb;
+  --red:#ff2255;--orange:#ff7a00;
+  --yellow:#ffc400;--blue:#4488ff;
+  --purple:#a855f7;--white:#e8f0fa;
+  --dim:#1e3050;--dim2:#2a4060;
   --mono:'IBM Plex Mono',monospace;
   --head:'Oswald',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--mono);overflow-x:hidden;}
+html,body{height:100%;background:var(--bg);color:var(--white);font-family:var(--mono);overflow-x:hidden;}
 
 /* ── HEADER ── */
-.header{
-  padding:14px 20px 10px;
-  background:var(--bg2);
+header{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:12px 20px;background:var(--bg2);
   border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
 }
-.logo{font-family:var(--head);font-size:1.1rem;color:var(--cyan);letter-spacing:3px;white-space:nowrap;}
-.logo span{color:var(--green);}
-.status-bar{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto;}
-.status-pill{
-  display:flex;align-items:center;gap:5px;
-  font-size:.65rem;letter-spacing:1px;
-  padding:3px 8px;border-radius:3px;
-  background:var(--bg3);border:1px solid var(--border);
-  transition:all .3s;
-}
-.s-dot{width:7px;height:7px;border-radius:50%;background:#1e3a58;transition:all .3s;}
-.s-dot.on{background:var(--green);box-shadow:0 0 6px var(--green);}
-.s-dot.tx{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
-.s-dot.relay{background:var(--orange);box-shadow:0 0 6px var(--orange);}
-.s-dot.moto{background:var(--red);box-shadow:0 0 6px var(--red);}
+.logo{font-family:var(--head);font-size:1.05rem;color:var(--cyan);letter-spacing:3px;}
+.logo b{color:var(--green);}
+.hbadge{font-size:.6rem;letter-spacing:1px;padding:2px 8px;border-radius:2px;
+  border:1px solid var(--border);color:var(--dim2);background:var(--bg3);}
+.hstatus{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
+.pill{display:flex;align-items:center;gap:5px;font-size:.62rem;
+  padding:3px 9px;border-radius:3px;background:var(--bg3);border:1px solid var(--border);
+  letter-spacing:.5px;transition:all .3s;}
+.pill.on{border-color:var(--green);background:rgba(0,255,136,.06);}
+.pill.tx{border-color:var(--cyan);background:rgba(0,200,255,.06);}
+.pill.hot{border-color:var(--orange);background:rgba(255,122,0,.06);}
+.pill.fire{border-color:var(--red);background:rgba(255,34,85,.06);}
+.led{width:7px;height:7px;border-radius:50%;background:var(--dim);transition:all .3s;}
+.on .led{background:var(--green);box-shadow:0 0 6px var(--green);}
+.tx .led{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.hot .led{background:var(--orange);box-shadow:0 0 6px var(--orange);}
+.fire .led{background:var(--red);box-shadow:0 0 6px var(--red);}
 
 /* ── TABS ── */
-.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;}
-.tab{
-  padding:10px 18px;font-family:var(--head);font-size:.8rem;letter-spacing:2px;
-  cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;
-  white-space:nowrap;transition:all .2s;user-select:none;
-}
-.tab:hover{color:var(--text2);}
-.tab.active{color:var(--cyan);border-bottom-color:var(--cyan);background:rgba(0,200,255,.04);}
-.tab-content{display:none;}
-.tab-content.active{display:block;}
+nav{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab{padding:10px 18px;font-family:var(--head);font-size:.78rem;letter-spacing:2px;
+  cursor:pointer;color:var(--dim2);border-bottom:2px solid transparent;
+  white-space:nowrap;transition:all .2s;user-select:none;}
+.tab:hover{color:var(--white);}
+.tab.on{color:var(--cyan);border-color:var(--cyan);background:rgba(0,200,255,.04);}
+.page{display:none;}
+.page.on{display:block;}
 
-/* ── TAB 1: SIMULATION ── */
-#tab-sim{padding:0;}
-.sim-layout{
-  display:grid;
-  grid-template-columns:160px 1fr 220px;
-  grid-template-rows:auto auto;
-  gap:0;
-  min-height:calc(100vh - 120px);
+/* ── TOOLTIP ── */
+#tip{
+  position:fixed;pointer-events:none;z-index:9999;
+  max-width:300px;padding:0;
+  filter:drop-shadow(0 4px 20px rgba(0,0,0,.8));
+  transition:opacity .15s;opacity:0;
 }
-@media(max-width:900px){
-  .sim-layout{grid-template-columns:130px 1fr 180px;}
+#tip.show{opacity:1;}
+.tip-inner{
+  background:#0c1422;border:1px solid var(--cyan);border-radius:6px;
+  overflow:hidden;min-width:180px;
+}
+.tip-head{
+  background:linear-gradient(90deg,rgba(0,200,255,.15),rgba(0,200,255,.05));
+  padding:7px 11px;border-bottom:1px solid var(--border);
+  font-family:var(--head);font-size:.82rem;letter-spacing:1px;color:var(--cyan);
+  display:flex;align-items:center;gap:6px;
+}
+.tip-body{padding:8px 11px;font-size:.7rem;line-height:1.8;color:#8ab0d0;}
+.tip-body b{color:var(--white);}
+.tip-body .tv{color:var(--yellow);}
+.tip-body .tg{color:var(--green);}
+.tip-body .tr{color:var(--red);}
+.tip-body .to{color:var(--orange);}
+
+/* ── SIMULATION PAGE ── */
+#page-sim{display:flex;min-height:calc(100vh - 88px);}
+.sim-nokia{
+  width:160px;flex-shrink:0;padding:14px 10px;
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;gap:12px;
 }
 @media(max-width:640px){
-  .sim-layout{grid-template-columns:1fr;grid-template-rows:auto auto auto auto;}
+  #page-sim{flex-direction:column;}
+  .sim-nokia{width:100%;flex-direction:row;justify-content:center;border-right:none;border-bottom:1px solid var(--border);}
+  .sim-esp{width:100%;border-left:none;border-top:1px solid var(--border);}
 }
-
-/* Nokia panel */
-.nokia-panel{
-  border-right:1px solid var(--border);
-  padding:14px 10px;
-  display:flex;flex-direction:column;align-items:center;gap:12px;
-  background:var(--bg2);
-  grid-row:1/3;
+.sim-cv{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.cv-wrap{flex:1;overflow-x:auto;background:var(--bg);}
+#simCv{display:block;min-width:580px;}
+.sim-log{border-top:1px solid var(--border);background:var(--bg2);height:90px;display:flex;flex-direction:column;}
+.log-hd{font-size:.58rem;color:var(--dim2);letter-spacing:2px;padding:4px 10px;border-bottom:1px solid var(--border);}
+.log-bd{overflow-y:auto;flex:1;padding:3px 10px;}
+.le{display:flex;gap:8px;font-size:.62rem;line-height:1.85;}
+.lt{color:#1a4a30;flex-shrink:0;}.lm{color:#3a6050;}
+.lm.g{color:var(--green);}.lm.c{color:var(--cyan);}.lm.o{color:var(--orange);}
+.sim-esp{
+  width:200px;flex-shrink:0;padding:10px 9px;
+  background:var(--bg2);border-left:1px solid var(--border);
+  overflow-y:auto;display:flex;flex-direction:column;gap:8px;
 }
-@media(max-width:640px){.nokia-panel{grid-row:auto;border-right:none;border-bottom:1px solid var(--border);flex-direction:row;justify-content:center;padding:10px;}}
-
 /* Nokia device */
-.nokia-device{
-  width:120px;
-  background:linear-gradient(165deg,#1a2030 0%,#0d1220 60%,#111828 100%);
-  border:2px solid #243050;
-  border-radius:18px 18px 22px 22px;
-  padding:8px 7px 10px;
-  box-shadow:0 4px 30px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04);
-  position:relative;
+.ndev{width:118px;background:linear-gradient(165deg,#18202e,#0c1018);
+  border:2px solid #22304a;border-radius:16px 16px 20px 20px;padding:7px 6px 10px;
+  box-shadow:0 6px 32px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.04);}
+.nscr{background:#040c04;border:1px solid #163016;border-radius:3px;
+  height:64px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;}
+.ntx{font-size:.54rem;text-align:center;transition:all .3s;line-height:1.4;}
+.nsec{border-radius:4px;padding:5px 4px 8px;width:100%;margin-bottom:3px;}
+.nsec.bat{background:rgba(255,122,0,.05);border:1px solid rgba(255,122,0,.28);}
+.nsec.pwr{background:rgba(0,170,255,.05);border:1px solid rgba(0,170,255,.28);}
+.nsl{font-size:.5rem;text-align:center;letter-spacing:1px;margin-bottom:4px;}
+.nsl.bat{color:var(--orange);}.nsl.pwr{color:var(--cyan);}
+.pads{display:flex;gap:3px;justify-content:center;}
+.pad{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.pb{width:26px;height:16px;border-radius:2px;border:1px solid;
+  display:flex;align-items:center;justify-content:center;font-size:.54rem;}
+.ps{width:7px;height:7px;border-radius:50%;border:1.5px solid;transition:all .3s;}
+.pb1{background:rgba(255,34,85,.1);border-color:#ff2255;color:#ff5577;}
+.ps1{background:#bb1133;border-color:#ff2255;box-shadow:0 0 4px #ff2255;}
+.pb2{background:#080808;border-color:#1a1a1a;color:#222;}
+.ps2{background:#0f0f0f;border-color:#1a1a1a;}
+.pb3{background:rgba(50,65,80,.12);border-color:#3a4a5a;color:#556677;}
+.ps3{background:#283848;border-color:#3a4a5a;}
+.pwrbtn{
+  width:44px;height:44px;border-radius:50%;margin:4px auto 6px;cursor:pointer;
+  background:radial-gradient(circle at 36% 30%,#1e2840,#0c1020);
+  border:2px solid #28395a;display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;transition:all .12s;user-select:none;-webkit-user-select:none;touch-action:none;
 }
-.nokia-device::before{
-  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
-  width:40px;height:4px;background:#1a2540;border-radius:0 0 3px 3px;
-}
-.nokia-screen{
-  background:#060e06;border:1px solid #1a3a1a;border-radius:4px;
-  height:70px;margin-bottom:7px;position:relative;overflow:hidden;
-  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;
-}
-.nokia-screen::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,255,136,.03),transparent);pointer-events:none;}
-.nscreen-line{font-size:.55rem;text-align:center;transition:all .3s;line-height:1.4;}
-.nl1{color:#0f4a1f;}
-.nl2{color:#0a8a30;font-size:.65rem;}
-.nl3{color:#064a18;font-size:.5rem;}
-
-/* Battery pad area */
-.nokia-section{
-  background:rgba(255,122,0,.06);border:1px solid rgba(255,122,0,.25);
-  border-radius:5px;padding:6px 5px 8px;width:100%;margin-bottom:4px;
-}
-.section-label{font-size:.52rem;color:var(--orange);letter-spacing:1px;margin-bottom:5px;text-align:center;}
-.pad-row{display:flex;gap:3px;justify-content:center;}
-.pad{
-  display:flex;flex-direction:column;align-items:center;gap:2px;
-  font-size:.52rem;cursor:default;
-}
-.pad-body{
-  width:28px;height:18px;border-radius:2px;border:1px solid;
-  display:flex;align-items:center;justify-content:center;font-size:.58rem;
-}
-.pad-bplus .pad-body{background:rgba(255,34,85,.12);border-color:#ff2255;color:#ff4466;}
-.pad-bsi   .pad-body{background:rgba(30,30,30,.3);border-color:#222;color:#333;}
-.pad-gnd   .pad-body{background:rgba(70,70,90,.15);border-color:#445;color:#667;}
-.pad-solder{width:8px;height:8px;border-radius:50%;border:1px solid;transition:all .3s;}
-.pad-bplus .pad-solder{background:#cc1133;border-color:#ff2255;box-shadow:0 0 4px #ff2255;}
-.pad-bsi   .pad-solder{background:#111;border-color:#222;}
-.pad-gnd   .pad-solder{background:#334;border-color:#445;}
-
-/* Button area */
-.nokia-btn-area{
-  background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.25);
-  border-radius:5px;padding:6px 5px 8px;width:100%;
-}
-.pwr-btn{
-  width:46px;height:46px;border-radius:50%;margin:4px auto 6px;
-  background:radial-gradient(circle at 38% 32%,#1e2840,#0c1020);
-  border:2px solid #2a3d5a;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:none;
-  font-size:1.3rem;transition:all .12s;position:relative;overflow:hidden;
-}
-.pwr-btn:hover{border-color:var(--cyan);box-shadow:0 0 12px rgba(0,200,255,.25);}
-.pwr-btn.pressed{
-  border-color:var(--cyan);
-  box-shadow:0 0 20px rgba(0,200,255,.6),inset 0 2px 8px rgba(0,0,0,.5);
-  transform:scale(.91);background:radial-gradient(circle at 38% 32%,#111828,#080e1a);
-}
-.pwr-btn::before{
-  content:'';position:absolute;inset:0;border-radius:50%;
-  background:radial-gradient(circle at 40% 30%,rgba(255,255,255,.06),transparent 60%);
-  pointer-events:none;
-}
-.pwr-icon{transition:all .2s;pointer-events:none;}
-.pwr-btn.pressed .pwr-icon{filter:drop-shadow(0 0 8px var(--cyan));}
-
-.contacts-row{display:flex;justify-content:space-around;margin-top:2px;}
-.contact{
-  width:14px;height:14px;border-radius:50%;border:1.5px solid;
-  display:flex;align-items:center;justify-content:center;font-size:.5rem;
-  transition:all .25s;
-}
-.ca{background:rgba(0,150,200,.1);border-color:var(--cyan2);color:var(--cyan2);}
-.cb{background:rgba(50,60,70,.1);border-color:#334;color:#446;}
-.ca.active{background:rgba(0,200,255,.3);border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 8px var(--cyan);}
-.btn-state{font-size:.52rem;color:#1e3a58;text-align:center;margin-top:4px;transition:all .3s;}
-.btn-state.active{color:var(--green);}
-
-.nokia-keys{margin-top:5px;}
-.key-row{display:flex;gap:2px;justify-content:center;margin-bottom:2px;}
-.key{width:22px;height:13px;background:#0e1522;border:1px solid #1a2535;border-radius:2px;
-     font-size:.4rem;color:#1e3045;display:flex;align-items:center;justify-content:center;}
-.key.wide{width:48px;}
-
-/* Wiring mini labels */
-.wire-legend{font-size:.56rem;line-height:2.1;width:100%;}
+.pwrbtn:hover{border-color:var(--cyan);box-shadow:0 0 12px rgba(0,200,255,.3);}
+.pwrbtn.dn{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,200,255,.6);
+  transform:scale(.91);background:radial-gradient(circle at 36% 30%,#101828,#07090f);}
+.pwrbtn.dn .pi{filter:drop-shadow(0 0 7px var(--cyan));}
+.pi{pointer-events:none;}
+.ctrow{display:flex;justify-content:space-around;margin-top:2px;}
+.ct{width:13px;height:13px;border-radius:50%;border:1.5px solid;
+  display:flex;align-items:center;justify-content:center;font-size:.48rem;transition:all .25s;}
+.cta{background:rgba(0,140,200,.1);border-color:#007799;color:#0099bb;}
+.ctb{background:rgba(40,50,60,.1);border-color:#283848;color:#3a4a55;}
+.cta.on{background:rgba(0,200,255,.28);border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 7px var(--cyan);}
+.bst{font-size:.48rem;color:var(--dim);text-align:center;margin-top:3px;transition:all .3s;}
+.bst.on{color:var(--green);}
+.nkeys{margin-top:5px;}
+.kr{display:flex;gap:2px;justify-content:center;margin-bottom:2px;}
+.k{width:20px;height:12px;background:#0d1420;border:1px solid #18253a;border-radius:2px;
+  font-size:.38rem;color:#1e3040;display:flex;align-items:center;justify-content:center;}
+.kw{width:44px;}
+.wleg{font-size:.54rem;line-height:2.1;width:100%;}
 .wl{display:flex;align-items:center;gap:5px;}
-.wl-bar{width:16px;height:2px;border-radius:1px;flex-shrink:0;}
+.wb{width:14px;height:2.5px;border-radius:1px;flex-shrink:0;}
+/* ESP chips */
+.chip{background:linear-gradient(160deg,#050d05,#030803);
+  border:1.5px solid #183a18;border-radius:6px;padding:9px 8px;}
+.chtit{font-family:var(--head);font-size:.72rem;color:var(--green2);letter-spacing:2px;text-align:center;margin-bottom:2px;}
+.chsub{font-size:.56rem;color:#163a16;text-align:center;margin-bottom:7px;
+  border-bottom:1px solid #0c2a0c;padding-bottom:5px;}
+.pins{display:flex;flex-direction:column;gap:5px;}
+.pi2{display:flex;align-items:center;gap:5px;}
+.pd{width:9px;height:9px;border-radius:50%;border:1.5px solid;flex-shrink:0;transition:all .3s;}
+.pn{font-size:.62rem;flex:1;}
+.pv{font-size:.6rem;padding:1px 5px;border-radius:3px;border:1px solid;min-width:34px;text-align:center;transition:all .3s;}
+.p-vin .pd{background:rgba(255,34,85,.2);border-color:var(--red);}
+.p-vin .pn{color:#cc2244;}.p-vin .pv{background:rgba(255,34,85,.08);color:var(--red);border-color:rgba(255,34,85,.25);}
+.p-gnd .pd{background:rgba(50,65,80,.3);border-color:#3a4a5a;}
+.p-gnd .pn{color:#4a6070;}.p-gnd .pv{background:rgba(40,55,70,.2);color:#4a6070;border-color:#1e2a3a;}
+.p-3v3 .pd{background:rgba(68,136,255,.18);border-color:var(--blue);}
+.p-3v3 .pn{color:#5b9af8;}.p-3v3 .pv{background:rgba(68,136,255,.07);color:var(--blue);border-color:rgba(68,136,255,.25);}
+.p-io2 .pd{background:rgba(0,150,200,.14);border-color:var(--cyan2);}
+.p-io2 .pn{color:var(--cyan2);}.p-io2 .pv{background:rgba(0,150,200,.07);color:var(--cyan2);border-color:rgba(0,150,200,.25);}
+.p-io2.L .pd{background:rgba(0,255,136,.32);border-color:var(--green);box-shadow:0 0 7px var(--green);}
+.p-io2.L .pn,.p-io2.L .pv{color:var(--green);}.p-io2.L .pv{background:rgba(0,255,136,.14);border-color:var(--green);}
+.p-io3 .pd{background:rgba(255,122,0,.14);border-color:var(--orange);}
+.p-io3 .pn{color:var(--orange);}.p-io3 .pv{background:rgba(255,122,0,.07);color:var(--orange);border-color:rgba(255,122,0,.25);}
+.p-io3.H .pd{background:rgba(255,122,0,.38);border-color:var(--orange);box-shadow:0 0 7px var(--orange);}
+.p-io3.H .pv{background:rgba(255,122,0,.18);color:var(--yellow);border-color:var(--orange);}
+.ant{text-align:center;margin-top:7px;padding-top:7px;border-top:1px solid #0c2a0c;}
+.ar{font-size:.65rem;color:#163a16;letter-spacing:-1px;transition:all .3s;}
+.ar.TX{color:var(--green);text-shadow:0 0 8px var(--green);}
+.as{font-size:.56rem;color:#0c2a0c;margin-top:2px;transition:color .3s;}
+.as.TX{color:var(--green);}
+.stbox{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:7px 9px;}
+.sttit{font-size:.58rem;color:var(--dim);letter-spacing:2px;margin-bottom:5px;}
+.str{display:flex;justify-content:space-between;font-size:.6rem;margin-bottom:4px;}
+.sv{color:var(--dim);transition:all .3s;}
+.sv.G{color:var(--green);}.sv.C{color:var(--cyan);}.sv.O{color:var(--orange);}.sv.R{color:var(--red);}
 
-/* Canvas area */
-.canvas-panel{
-  position:relative;overflow:hidden;background:var(--bg);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;
+/* ── DIAGRAM PAGES ── */
+.diag-page{padding:14px;max-width:1300px;margin:0 auto;}
+.diag-hd{
+  background:var(--bg2);border:1px solid var(--border);border-radius:7px 7px 0 0;
+  padding:10px 14px;display:flex;align-items:center;gap:10px;
 }
-.canvas-scroll{overflow-x:auto;flex:1;}
-#mainCanvas{display:block;min-width:700px;}
+.diag-hd-title{font-family:var(--head);font-size:.88rem;letter-spacing:2px;}
+.diag-notice{font-size:.65rem;color:var(--dim2);margin-left:auto;display:flex;align-items:center;gap:6px;}
+.diag-scroll{overflow-x:auto;border:1px solid var(--border);border-top:none;border-radius:0 0 7px 7px;margin-bottom:14px;}
+.diag-scroll svg{display:block;}
 
-/* Log strip */
-.log-strip{
-  border-top:1px solid var(--border);background:var(--bg2);
-  height:100px;overflow:hidden;
-  display:flex;flex-direction:column;
-}
-.log-title{font-size:.6rem;color:var(--text3);letter-spacing:2px;padding:5px 10px;border-bottom:1px solid var(--border);}
-.log-body{overflow-y:auto;flex:1;padding:4px 10px;}
-.log-entry{display:flex;gap:8px;font-size:.63rem;line-height:1.8;}
-.lt{color:#1a4a30;flex-shrink:0;}
-.lm{color:#3a6858;}
-.lm.g{color:var(--green);}
-.lm.c{color:var(--cyan);}
-.lm.o{color:var(--orange);}
+/* SVG hover cursors */
+.hoverable{cursor:pointer;}
+.wire-hit{stroke:transparent;stroke-width:16;fill:none;cursor:pointer;}
 
-/* ESP panel */
-.esp-panel{
-  padding:12px 10px;background:var(--bg2);
-  display:flex;flex-direction:column;gap:10px;
-  grid-row:1/3;overflow-y:auto;
-}
-@media(max-width:640px){.esp-panel{grid-row:auto;border-top:1px solid var(--border);}}
-
-.esp-chip{
-  background:linear-gradient(160deg,#060e06,#040a04);
-  border:1.5px solid #1a4a1a;border-radius:7px;padding:10px 9px;
-}
-.chip-title{font-family:var(--head);font-size:.75rem;color:var(--green2);letter-spacing:2px;margin-bottom:8px;text-align:center;}
-.chip-subtitle{font-size:.58rem;color:#1a4a1a;text-align:center;margin-bottom:8px;border-bottom:1px solid #0f2a0f;padding-bottom:6px;}
-
-.pin-list{display:flex;flex-direction:column;gap:5px;}
-.pin-item{display:flex;align-items:center;gap:6px;}
-.pin-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid;flex-shrink:0;transition:all .3s;}
-.pin-name{font-size:.65rem;flex:1;transition:color .3s;}
-.pin-val{font-size:.62rem;padding:1px 6px;border-radius:3px;border:1px solid;min-width:36px;text-align:center;transition:all .3s;}
-
-/* Pin colours */
-.pin-vin  .pin-dot{background:rgba(255,34,85,.25);border-color:#ff2255;}
-.pin-vin  .pin-name{color:#cc2244;}
-.pin-vin  .pin-val{background:rgba(255,34,85,.1);color:#ff4466;border-color:rgba(255,34,85,.3);}
-.pin-gnd  .pin-dot{background:rgba(60,70,90,.3);border-color:#3a4a5a;}
-.pin-gnd  .pin-name{color:#4a6070;}
-.pin-gnd  .pin-val{background:rgba(40,50,70,.2);color:#4a6070;border-color:#1e2a3a;}
-.pin-3v3  .pin-dot{background:rgba(59,130,246,.2);border-color:#3b82f6;}
-.pin-3v3  .pin-name{color:#5b9af8;}
-.pin-3v3  .pin-val{background:rgba(59,130,246,.08);color:#5b9af8;border-color:rgba(59,130,246,.25);}
-.pin-io2  .pin-dot{background:rgba(0,180,220,.15);border-color:var(--cyan2);}
-.pin-io2  .pin-name{color:var(--cyan2);}
-.pin-io2  .pin-val{background:rgba(0,180,220,.08);color:var(--cyan2);border-color:rgba(0,180,220,.25);}
-.pin-io2.low .pin-dot{background:rgba(0,255,136,.35);border-color:var(--green);box-shadow:0 0 8px var(--green);}
-.pin-io2.low .pin-name{color:var(--green);}
-.pin-io2.low .pin-val{background:rgba(0,255,136,.15);color:var(--green);border-color:var(--green);}
-.pin-io3  .pin-dot{background:rgba(255,122,0,.15);border-color:var(--orange);}
-.pin-io3  .pin-name{color:var(--orange);}
-.pin-io3  .pin-val{background:rgba(255,122,0,.08);color:var(--orange);border-color:rgba(255,122,0,.25);}
-.pin-io3.high .pin-dot{background:rgba(255,122,0,.4);border-color:var(--orange);box-shadow:0 0 8px var(--orange);}
-.pin-io3.high .pin-val{background:rgba(255,122,0,.2);color:var(--yellow);border-color:var(--orange);}
-
-.antenna-box{text-align:center;margin-top:8px;padding-top:8px;border-top:1px solid #0f2a0f;}
-.ant-rings{font-size:.7rem;transition:all .3s;color:#1a4a1a;letter-spacing:-2px;}
-.ant-rings.tx{color:var(--green);text-shadow:0 0 8px var(--green);}
-.ant-label{font-size:.58rem;color:#1a3a1a;margin-top:3px;}
-.ant-status{font-size:.6rem;color:#0f2a0f;margin-top:2px;transition:color .3s;}
-.ant-status.tx{color:var(--green);}
-
-.state-box{
-  background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;
-}
-.state-title{font-size:.6rem;color:var(--text3);letter-spacing:2px;margin-bottom:6px;}
-.state-row{display:flex;justify-content:space-between;font-size:.62rem;margin-bottom:4px;}
-.sv{transition:all .3s;color:#1e3050;}
-.sv.on{color:var(--green);}
-.sv.tx{color:var(--cyan);}
-.sv.hot{color:var(--orange);}
-.sv.fire{color:var(--red);}
-
-/* ── TAB 2: WIRING DIAGRAM ── */
-#tab-wire{padding:12px;}
-.wire-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  max-width:1100px;margin:0 auto;
-}
-@media(max-width:700px){.wire-grid{grid-template-columns:1fr;}}
-.full-w{grid-column:1/-1;}
-.wire-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;}
-.wcard-title{font-family:var(--head);font-size:.8rem;letter-spacing:2px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
-.wcard-title.n{color:var(--cyan);}
-.wcard-title.m{color:var(--orange);}
-.wcard-title.d{color:var(--yellow);}
-.conn-table{width:100%;border-collapse:collapse;font-size:.68rem;}
-.conn-table th{padding:5px 8px;text-align:left;color:var(--text3);border-bottom:1px solid var(--border);letter-spacing:1px;font-size:.62rem;}
-.conn-table td{padding:5px 8px;border-bottom:1px solid rgba(22,32,64,.5);vertical-align:middle;}
-.conn-table tr:last-child td{border-bottom:none;}
-.wire-pill{display:inline-block;padding:1px 7px;border-radius:3px;font-size:.62rem;border:1px solid;white-space:nowrap;}
-.wp-red{background:rgba(255,34,85,.1);color:#ff4466;border-color:rgba(255,34,85,.3);}
-.wp-blk{background:rgba(60,70,90,.2);color:#6a7a8a;border-color:#2a3a4a;}
-.wp-cyn{background:rgba(0,180,220,.08);color:var(--cyan);border-color:rgba(0,180,220,.3);}
-.wp-blu{background:rgba(59,130,246,.08);color:#6ba3ff;border-color:rgba(59,130,246,.3);}
-.wp-org{background:rgba(255,122,0,.1);color:var(--orange);border-color:rgba(255,122,0,.3);}
-.wp-grn{background:rgba(0,255,136,.06);color:var(--green2);border-color:rgba(0,255,136,.25);}
-.wp-yel{background:rgba(255,196,0,.08);color:var(--yellow);border-color:rgba(255,196,0,.3);}
-.wp-pur{background:rgba(168,85,247,.08);color:#c084fc;border-color:rgba(168,85,247,.3);}
-.from{color:var(--text2);}
-.arr{color:var(--text3);}
-.to{color:var(--text);}
-.note-chip{font-size:.58rem;color:#ff8844;margin-top:8px;padding:5px 8px;background:rgba(255,122,0,.06);border-radius:4px;border:1px solid rgba(255,122,0,.15);}
-
-/* diagram SVG in wire tab */
-.diag-wrap{overflow-x:auto;background:var(--bg);border-radius:8px;border:1px solid var(--border);}
-.diag-wrap svg{display:block;min-width:900px;}
-
-/* ── TAB 3: MECHANISM ── */
-#tab-mech{padding:12px;max-width:900px;margin:0 auto;}
-.mech-intro{
-  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
-  padding:16px;margin-bottom:14px;font-size:.78rem;line-height:1.9;color:var(--text2);
-}
-.mech-intro strong{color:var(--cyan);}
-.steps{display:flex;flex-direction:column;gap:0;}
-.step{
-  display:flex;gap:0;
-  border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px;
-  background:var(--bg2);
-}
-.step-num{
-  width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  font-family:var(--head);font-size:1.6rem;font-weight:700;
-  border-right:1px solid var(--border);
-}
-.step-body{padding:12px 14px;flex:1;}
-.step-title{font-family:var(--head);font-size:.85rem;letter-spacing:2px;margin-bottom:5px;}
-.step-desc{font-size:.72rem;line-height:1.9;color:var(--text2);}
-.step-timing{font-size:.6rem;color:var(--text3);margin-top:5px;}
-.step-code{
-  font-size:.65rem;background:var(--bg3);border-radius:4px;padding:7px 10px;
-  margin-top:7px;color:#5a8060;line-height:1.8;
-}
+/* ── MECHANISM / PARTS pages ── */
+.mech-page,.parts-page{padding:14px;max-width:900px;margin:0 auto;}
+.intro{background:var(--bg2);border:1px solid var(--border);border-radius:7px;
+  padding:14px;margin-bottom:12px;font-size:.76rem;line-height:1.9;color:#8ab0d0;}
+.intro strong{color:var(--cyan);}
+.step{display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;margin-bottom:9px;background:var(--bg2);}
+.snum{width:52px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--head);font-size:1.5rem;font-weight:700;border-right:1px solid var(--border);}
+.sbod{padding:11px 13px;flex:1;}
+.stit{font-family:var(--head);font-size:.82rem;letter-spacing:2px;margin-bottom:4px;}
+.sdsc{font-size:.7rem;line-height:1.9;color:#8ab0d0;}
+.scode{font-size:.64rem;background:var(--bg3);border-radius:4px;padding:6px 9px;margin-top:6px;color:#4a7060;line-height:1.8;}
 .kw{color:var(--cyan);}
-.s1 .step-num{background:rgba(0,200,255,.08);color:var(--cyan);}
-.s2 .step-num{background:rgba(0,255,136,.06);color:var(--green2);}
-.s3 .step-num{background:rgba(0,200,255,.06);color:var(--cyan2);}
-.s4 .step-num{background:rgba(255,122,0,.08);color:var(--orange);}
-.s5 .step-num{background:rgba(168,85,247,.08);color:#c084fc;}
-.s6 .step-num{background:rgba(255,34,85,.08);color:var(--red);}
-.s7 .step-num{background:rgba(0,255,136,.08);color:var(--green);}
-.s1 .step-title{color:var(--cyan);}
-.s2 .step-title{color:var(--green2);}
-.s3 .step-title{color:var(--cyan2);}
-.s4 .step-title{color:var(--orange);}
-.s5 .step-title{color:#c084fc;}
-.s6 .step-title{color:var(--red);}
-.s7 .step-title{color:var(--green);}
+.stm{font-size:.58rem;color:var(--dim2);margin-top:4px;}
+.s1 .snum{background:rgba(0,200,255,.07);color:var(--cyan);}  .s1 .stit{color:var(--cyan);}
+.s2 .snum{background:rgba(0,255,136,.05);color:var(--green);} .s2 .stit{color:var(--green);}
+.s3 .snum{background:rgba(68,136,255,.07);color:var(--blue);} .s3 .stit{color:var(--blue);}
+.s4 .snum{background:rgba(255,122,0,.07);color:var(--orange);}  .s4 .stit{color:var(--orange);}
+.s5 .snum{background:rgba(168,85,247,.07);color:var(--purple);}  .s5 .stit{color:var(--purple);}
+.s6 .snum{background:rgba(255,196,0,.07);color:var(--yellow);}  .s6 .stit{color:var(--yellow);}
+.s7 .snum{background:rgba(0,255,136,.08);color:var(--green);}  .s7 .stit{color:var(--green);}
+.tl-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:12px;margin-top:12px;}
+.tl-bar{display:flex;height:30px;border-radius:3px;overflow:hidden;margin:8px 0 5px;}
+.tl-seg{display:flex;align-items:center;justify-content:center;font-family:var(--head);font-size:.58rem;letter-spacing:.5px;}
+.tl-ts{display:flex;justify-content:space-between;font-size:.58rem;color:var(--dim2);padding:0 2px;}
 
-.timing-bar{
-  background:var(--bg3);border:1px solid var(--border);border-radius:8px;
-  padding:14px;margin-top:14px;
-}
-.tb-title{font-family:var(--head);font-size:.75rem;color:var(--text3);letter-spacing:2px;margin-bottom:12px;}
-.tb-track{position:relative;height:28px;background:#060a0f;border-radius:4px;overflow:hidden;margin-bottom:8px;}
-.tb-seg{position:absolute;top:0;height:100%;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-family:var(--head);letter-spacing:1px;}
-
-/* ── TAB 4: COMPONENTS ── */
-#tab-parts{padding:12px;max-width:1000px;margin:0 auto;}
-.part-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;}
-.part-card{
-  background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;
-  position:relative;overflow:hidden;
-}
-.part-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.pc-n .part-card::before{background:linear-gradient(90deg,var(--cyan),var(--blue));}
-.pc-m .part-card::before{background:linear-gradient(90deg,var(--orange),var(--red));}
-.pc-b .part-card::before{background:linear-gradient(90deg,var(--green),var(--cyan));}
-.part-header{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;}
-.part-name{font-family:var(--head);font-size:.85rem;letter-spacing:1px;}
-.part-qty{font-size:.65rem;padding:2px 7px;border-radius:3px;border:1px solid;}
-.part-specs{font-size:.65rem;line-height:2;color:var(--text2);}
-.spec-row{display:flex;gap:6px;}
-.sk{color:var(--text3);flex-shrink:0;min-width:80px;}
-.sv2{color:var(--text);}
-.part-note{font-size:.6rem;color:#553300;margin-top:6px;padding:4px 7px;background:rgba(255,100,0,.06);border-radius:3px;}
-.part-side{font-size:.6rem;margin-top:4px;}
-.ps-n{color:var(--cyan2);}
-.ps-m{color:var(--orange);}
-.ps-b{color:var(--green2);}
-.parts-summary{
-  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
-  padding:12px 14px;margin-bottom:12px;display:flex;gap:20px;flex-wrap:wrap;
-}
-.sum-item{font-size:.7rem;}
-.sum-label{color:var(--text3);}
-.sum-val{color:var(--yellow);font-weight:600;margin-left:5px;}
-
-/* Shared utils */
-.badge{display:inline-block;font-size:.58rem;padding:1px 6px;border-radius:3px;border:1px solid;margin-left:4px;vertical-align:middle;}
-.bd-n{color:var(--cyan);border-color:rgba(0,200,255,.3);background:rgba(0,200,255,.06);}
-.bd-m{color:var(--orange);border-color:rgba(255,122,0,.3);background:rgba(255,122,0,.06);}
-.bd-b{color:var(--green2);border-color:rgba(0,204,102,.3);background:rgba(0,204,102,.06);}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:10px;}
+.pcard{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:12px;position:relative;overflow:hidden;}
+.pcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.pn .pcard::before{background:linear-gradient(90deg,var(--cyan),var(--blue));}
+.pm .pcard::before{background:linear-gradient(90deg,var(--orange),var(--red));}
+.pb2 .pcard::before{background:linear-gradient(90deg,var(--green),var(--cyan));}
+.pp .pcard::before{background:linear-gradient(90deg,var(--purple),var(--blue));}
+.ph2{display:flex;align-items:baseline;gap:7px;margin-bottom:7px;}
+.pnam{font-family:var(--head);font-size:.82rem;letter-spacing:1px;}
+.pqty{font-size:.62rem;padding:1px 6px;border-radius:3px;border:1px solid;}
+.psp{font-size:.64rem;line-height:2;color:#8ab0d0;}
+.pr{display:flex;gap:5px;}.psk{color:var(--dim2);flex-shrink:0;min-width:80px;}.psv{color:var(--white);}
+.pnote{font-size:.6rem;color:#885522;margin-top:6px;padding:4px 7px;background:rgba(255,100,0,.05);border-radius:3px;border:1px solid rgba(255,100,0,.15);}
+.bdg{display:inline-block;font-size:.55rem;padding:1px 5px;border-radius:3px;border:1px solid;margin-left:4px;}
+.bn{color:var(--cyan);border-color:rgba(0,200,255,.3);background:rgba(0,200,255,.05);}
+.bm{color:var(--orange);border-color:rgba(255,122,0,.3);background:rgba(255,122,0,.05);}
+.bb{color:var(--green);border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.05);}
+.bp{color:var(--purple);border-color:rgba(168,85,247,.3);background:rgba(168,85,247,.05);}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="logo">NOKIA<span>×</span>ESP32·C3 <span style="font-size:.65rem;color:var(--text3);letter-spacing:1px">REMOTE MOTO v1.0</span></div>
-  <div class="status-bar">
-    <div class="status-pill"><div class="s-dot" id="sd-btn"></div><span id="sl-btn" style="color:var(--text3)">NÚT NGUỒN</span></div>
-    <div class="status-pill"><div class="s-dot tx" id="sd-esp"></div><span id="sl-esp" style="color:var(--text3)">ESP-NOW</span></div>
-    <div class="status-pill"><div class="s-dot relay" id="sd-relay"></div><span id="sl-relay" style="color:var(--text3)">RELAY</span></div>
-    <div class="status-pill"><div class="s-dot moto" id="sd-moto"></div><span id="sl-moto" style="color:var(--text3)">MÁY ĐỀ</span></div>
+<!-- TOOLTIP -->
+<div id="tip">
+  <div class="tip-inner">
+    <div class="tip-head" id="tip-head"></div>
+    <div class="tip-body" id="tip-body"></div>
   </div>
 </div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">NOKIA <b>×</b> ESP32·C3</div>
+  <span class="hbadge">REMOTE MOTO v2</span>
+  <div class="hstatus">
+    <div class="pill" id="pl-btn"><div class="led"></div><span id="sl-btn">NÚT NGUỒN</span></div>
+    <div class="pill" id="pl-en"><div class="led"></div><span id="sl-en">ESP-NOW</span></div>
+    <div class="pill" id="pl-rl"><div class="led"></div><span id="sl-rl">RELAY</span></div>
+    <div class="pill" id="pl-mt"><div class="led"></div><span id="sl-mt">MÁY ĐỀ</span></div>
+  </div>
+</header>
 
 <!-- TABS -->
-<div class="tabs">
-  <div class="tab active" onclick="switchTab('sim',this)">⚡ MÔ PHỎNG</div>
-  <div class="tab" onclick="switchTab('wire',this)">🔌 SƠ ĐỒ DÂY</div>
-  <div class="tab" onclick="switchTab('mech',this)">⚙ CƠ CHẾ</div>
-  <div class="tab" onclick="switchTab('parts',this)">🔩 LINH KIỆN</div>
+<nav>
+  <div class="tab on" onclick="goTab('sim',this)">⚡ MÔ PHỎNG</div>
+  <div class="tab" onclick="goTab('nokia',this)">📱 NOKIA SIDE</div>
+  <div class="tab" onclick="goTab('moto',this)">🏍 XE MÁY SIDE</div>
+  <div class="tab" onclick="goTab('mech',this)">⚙ CƠ CHẾ</div>
+  <div class="tab" onclick="goTab('parts',this)">🔩 LINH KIỆN</div>
+</nav>
+
+<!-- ══════════════════════ SIM PAGE ══════════════════════ -->
+<div class="page on" id="page-sim">
+<div id="page-sim" style="display:flex;min-height:calc(100vh - 88px);">
+<div class="sim-nokia">
+  <div class="ndev">
+    <div class="nscr">
+      <div class="ntx" style="color:#0a3a0a">NOKIA</div>
+      <div class="ntx" id="nstxt" style="color:#0a8a30;font-size:.62rem">Chờ lệnh...</div>
+      <div class="ntx" style="color:#042404;font-size:.48rem">▌▌▌ ◉ 3.7V</div>
+    </div>
+    <div class="nsec bat">
+      <div class="nsl bat">🟠 BATTERY CONN</div>
+      <div class="pads">
+        <div class="pad"><div class="pb pb1">B+</div><div class="ps ps1"></div></div>
+        <div class="pad"><div class="pb pb2" style="font-size:.4rem">BSI</div><div class="ps ps2"></div></div>
+        <div class="pad"><div class="pb pb3">GND</div><div class="ps ps3"></div></div>
+      </div>
+    </div>
+    <div class="nsec pwr">
+      <div class="nsl pwr">🔴 NÚT NGUỒN</div>
+      <div class="pwrbtn" id="pwrBtn"
+        onmousedown="btnPress()" onmouseup="btnRel()" onmouseleave="btnRel()"
+        ontouchstart="btnPress(event)" ontouchend="btnRel(event)">
+        <span class="pi">⏻</span>
+      </div>
+      <div class="ctrow">
+        <div class="ct cta" id="ctA">A</div>
+        <div style="font-size:.4rem;color:var(--dim);align-self:center">━━</div>
+        <div class="ct ctb">B</div>
+      </div>
+      <div class="bst" id="bst">A hở · GPIO2=HIGH</div>
+    </div>
+    <div class="nkeys">
+      <div class="kr"><div class="k">1</div><div class="k">2</div><div class="k">3</div></div>
+      <div class="kr"><div class="k">4</div><div class="k">5</div><div class="k">6</div></div>
+      <div class="kr"><div class="k kw"># *</div></div>
+    </div>
+  </div>
+  <div class="wleg">
+    <div class="wl"><div class="wb" style="background:#ff2255"></div><span style="color:#553344;font-size:.52rem">B+ → VIN</span></div>
+    <div class="wl"><div class="wb" style="background:#3a5060"></div><span style="color:#2a3a50;font-size:.52rem">GND</span></div>
+    <div class="wl"><div class="wb" style="background:#4488ff"></div><span style="color:#1e3a5a;font-size:.52rem">3V3 → 10kΩ</span></div>
+    <div class="wl"><div class="wb" style="background:#00aaff"></div><span style="color:#003355;font-size:.52rem">A → GPIO2</span></div>
+  </div>
+  <div style="font-size:.56rem;color:var(--dim);text-align:center">👆 Nhấn giữ ⏻</div>
+</div>
+<div class="sim-cv">
+  <div class="cv-wrap"><canvas id="simCv" height="430"></canvas></div>
+  <div class="sim-log">
+    <div class="log-hd">📟 SERIAL MONITOR — ESP32-C3</div>
+    <div class="log-bd" id="logBd">
+      <div class="le"><span class="lt">[  0ms]</span><span class="lm c">ESP32-C3 #1 boot — WiFi STA</span></div>
+      <div class="le"><span class="lt">[  8ms]</span><span class="lm c">esp_now_init() → OK</span></div>
+      <div class="le"><span class="lt">[ 14ms]</span><span class="lm">GPIO2 = HIGH (10kΩ pull-up)</span></div>
+      <div class="le"><span class="lt">[ 18ms]</span><span class="lm">Peer MAC registered</span></div>
+      <div class="le"><span class="lt">[ 20ms]</span><span class="lm">Waiting for button press...</span></div>
+    </div>
+  </div>
+</div>
+<div class="sim-esp">
+  <div class="chip">
+    <div class="chtit">ESP32-C3 #1</div><div class="chsub">NOKIA · TX</div>
+    <div class="pins">
+      <div class="pi2 p-vin"><div class="pd"></div><div class="pn">VIN</div><div class="pv">3.7V</div></div>
+      <div class="pi2 p-gnd"><div class="pd"></div><div class="pn">GND</div><div class="pv">0V</div></div>
+      <div class="pi2 p-3v3"><div class="pd"></div><div class="pn">3V3→10kΩ</div><div class="pv">3.3V</div></div>
+      <div class="pi2 p-io2" id="pio2"><div class="pd"></div><div class="pn">GPIO2</div><div class="pv" id="io2v">HIGH</div></div>
+    </div>
+    <div class="ant"><div class="ar" id="ant1">((·))</div><div class="as" id="as1">IDLE</div></div>
+  </div>
+  <div class="chip" style="border-color:#1a3a1a;">
+    <div class="chtit" style="color:#66cc44">ESP32-C3 #2</div><div class="chsub">XE MÁY · RX</div>
+    <div class="pins">
+      <div class="pi2 p-vin"><div class="pd" style="border-color:#cc4400;background:rgba(200,70,0,.18)"></div><div class="pn" style="color:#cc4400">VIN←5V</div><div class="pv" style="color:#cc5500;border-color:rgba(200,70,0,.3)">5V</div></div>
+      <div class="pi2 p-gnd"><div class="pd"></div><div class="pn">GND</div><div class="pv">0V</div></div>
+      <div class="pi2 p-io3" id="pio3"><div class="pd"></div><div class="pn">GPIO3→1kΩ</div><div class="pv" id="io3v">LOW</div></div>
+    </div>
+    <div class="ant"><div class="ar" id="ant2">((·))</div><div class="as" id="as2">IDLE</div></div>
+  </div>
+  <div class="stbox">
+    <div class="sttit">SYSTEM STATE</div>
+    <div class="str"><span style="color:var(--dim2)">GPIO2</span><span class="sv" id="sg2">HIGH</span></div>
+    <div class="str"><span style="color:var(--dim2)">ESP-NOW</span><span class="sv" id="sen">IDLE</span></div>
+    <div class="str"><span style="color:var(--dim2)">GPIO3</span><span class="sv" id="sg3">LOW</span></div>
+    <div class="str"><span style="color:var(--dim2)">Relay</span><span class="sv" id="srl">OFF</span></div>
+    <div class="str"><span style="color:var(--dim2)">Máy đề</span><span class="sv" id="smt">—</span></div>
+    <div class="str"><span style="color:var(--dim2)">Packets</span><span class="sv" id="spk" style="color:var(--dim)">0</span></div>
+  </div>
+</div>
+</div>
 </div>
 
-<!-- ════════════════ TAB 1: SIMULATION ════════════════ -->
-<div class="tab-content active" id="tab-sim">
-<div class="sim-layout">
-
-  <!-- Nokia -->
-  <div class="nokia-panel">
-    <div class="nokia-device">
-      <div class="nokia-screen">
-        <div class="nscreen-line nl1">NOKIA 105</div>
-        <div class="nscreen-line nl2" id="nscreen">Chờ lệnh...</div>
-        <div class="nscreen-line nl3" id="nsignal">▌▌▌ ◉ 3.7V</div>
-      </div>
-
-      <!-- Battery connector -->
-      <div class="nokia-section">
-        <div class="section-label">🟠 BATTERY CONN.</div>
-        <div class="pad-row">
-          <div class="pad pad-bplus">
-            <div class="pad-body">B+</div>
-            <div class="pad-solder"></div>
-          </div>
-          <div class="pad pad-bsi">
-            <div class="pad-body">BSI</div>
-            <div class="pad-solder"></div>
-          </div>
-          <div class="pad pad-gnd">
-            <div class="pad-body">GND</div>
-            <div class="pad-solder"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Power button -->
-      <div class="nokia-btn-area">
-        <div class="section-label">🔴 NÚT NGUỒN</div>
-        <div class="pwr-btn" id="pwrBtn"
-          onmousedown="press()" onmouseup="release()" onmouseleave="release()"
-          ontouchstart="press(event)" ontouchend="release(event)">
-          <span class="pwr-icon">⏻</span>
-        </div>
-        <div class="contacts-row">
-          <div class="contact ca" id="ca">A</div>
-          <div style="font-size:.45rem;color:#1e2a3a;align-self:center">━ ━</div>
-          <div class="contact cb">B</div>
-        </div>
-        <div class="btn-state" id="btnState">A hở · GPIO2=HIGH</div>
-      </div>
-
-      <div class="nokia-keys">
-        <div class="key-row"><div class="key">1</div><div class="key">2</div><div class="key">3</div></div>
-        <div class="key-row"><div class="key">4</div><div class="key">5</div><div class="key">6</div></div>
-        <div class="key-row"><div class="key wide"># &nbsp; *</div></div>
-      </div>
-    </div>
-
-    <div class="wire-legend">
-      <div class="wl"><div class="wl-bar" style="background:#ff2255"></div><span style="font-size:.55rem;color:#553344">B+ → VIN</span></div>
-      <div class="wl"><div class="wl-bar" style="background:#3a4a5a"></div><span style="font-size:.55rem;color:#2a3a4a">GND</span></div>
-      <div class="wl"><div class="wl-bar" style="background:#3b82f6;border-style:dashed"></div><span style="font-size:.55rem;color:#1e3a5a">3V3→10kΩ</span></div>
-      <div class="wl"><div class="wl-bar" style="background:#0088cc"></div><span style="font-size:.55rem;color:#004488">A→GPIO2</span></div>
-    </div>
-
-    <div style="font-size:.6rem;color:var(--text3);text-align:center;margin-top:4px;">
-      👆 NHẤN GIỮ<br>nút ⏻ để test
-    </div>
+<!-- ══════════════════════ NOKIA DIAGRAM ══════════════════════ -->
+<div class="page" id="page-nokia">
+<div class="diag-page">
+  <div class="diag-hd">
+    <div class="diag-hd-title" style="color:var(--cyan)">📱 NOKIA TA-1174 → ESP32-C3 #1 (TRANSMITTER)</div>
+    <div class="diag-notice">💡 Rê chuột lên dây / chân để xem thông tin</div>
   </div>
-
-  <!-- Canvas -->
-  <div class="canvas-panel">
-    <div class="canvas-scroll">
-      <canvas id="mainCanvas" height="460"></canvas>
-    </div>
-    <div class="log-strip">
-      <div class="log-title">📟 SERIAL MONITOR — ESP32-C3</div>
-      <div class="log-body" id="logBody">
-        <div class="log-entry"><span class="lt">[  0ms]</span><span class="lm c">ESP32-C3 #1 boot — WiFi STA mode</span></div>
-        <div class="log-entry"><span class="lt">[  8ms]</span><span class="lm c">esp_now_init() → OK</span></div>
-        <div class="log-entry"><span class="lt">[ 12ms]</span><span class="lm">Peer MAC đã đăng ký</span></div>
-        <div class="log-entry"><span class="lt">[ 15ms]</span><span class="lm">GPIO2 = HIGH (pull-up 10kΩ active)</span></div>
-        <div class="log-entry"><span class="lt">[ 18ms]</span><span class="lm">Chờ tín hiệu nút nguồn...</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ESP panel -->
-  <div class="esp-panel">
-
-    <!-- ESP32-C3 #1 -->
-    <div class="esp-chip">
-      <div class="chip-title">ESP32-C3 #1</div>
-      <div class="chip-subtitle">NOKIA · TRANSMITTER</div>
-      <div class="pin-list">
-        <div class="pin-item pin-vin">
-          <div class="pin-dot"></div>
-          <div class="pin-name">VIN</div>
-          <div class="pin-val">3.7V</div>
-        </div>
-        <div class="pin-item pin-gnd">
-          <div class="pin-dot"></div>
-          <div class="pin-name">GND</div>
-          <div class="pin-val">0V</div>
-        </div>
-        <div class="pin-item pin-3v3">
-          <div class="pin-dot"></div>
-          <div class="pin-name">3V3 → 10kΩ</div>
-          <div class="pin-val">3.3V</div>
-        </div>
-        <div class="pin-item pin-io2" id="pinIO2">
-          <div class="pin-dot"></div>
-          <div class="pin-name">GPIO2</div>
-          <div class="pin-val" id="io2val">HIGH</div>
-        </div>
-      </div>
-      <div class="antenna-box">
-        <div class="ant-rings" id="ant1">((·))</div>
-        <div class="ant-label">ESP-NOW 2.4GHz</div>
-        <div class="ant-status" id="antS1">IDLE</div>
-      </div>
-    </div>
-
-    <!-- ESP32-C3 #2 -->
-    <div class="esp-chip" style="border-color:#2a3a1a;">
-      <div class="chip-title" style="color:#7acc55">ESP32-C3 #2</div>
-      <div class="chip-subtitle">XE MÁY · RECEIVER</div>
-      <div class="pin-list">
-        <div class="pin-item pin-vin" style="">
-          <div class="pin-dot" style="border-color:#cc4400;background:rgba(200,70,0,.2)"></div>
-          <div class="pin-name" style="color:#cc4400">VIN ← 5V Buck</div>
-          <div class="pin-val" style="color:#cc5500;border-color:rgba(200,70,0,.3);background:rgba(200,70,0,.08)">5V</div>
-        </div>
-        <div class="pin-item pin-gnd">
-          <div class="pin-dot"></div>
-          <div class="pin-name">GND</div>
-          <div class="pin-val">0V</div>
-        </div>
-        <div class="pin-item pin-io3" id="pinIO3">
-          <div class="pin-dot"></div>
-          <div class="pin-name">GPIO3 → 1kΩ</div>
-          <div class="pin-val" id="io3val">LOW</div>
-        </div>
-      </div>
-      <div class="antenna-box">
-        <div class="ant-rings" id="ant2">((·))</div>
-        <div class="ant-label">ESP-NOW RX</div>
-        <div class="ant-status" id="antS2">IDLE</div>
-      </div>
-    </div>
-
-    <!-- State box -->
-    <div class="state-box">
-      <div class="state-title">TRẠNG THÁI HỆ THỐNG</div>
-      <div class="state-row"><span style="color:var(--text3)">Nút nguồn</span><span class="sv" id="sv-btn">NHẢ</span></div>
-      <div class="state-row"><span style="color:var(--text3)">GPIO2</span><span class="sv" id="sv-g2">HIGH</span></div>
-      <div class="state-row"><span style="color:var(--text3)">ESP-NOW</span><span class="sv" id="sv-en">IDLE</span></div>
-      <div class="state-row"><span style="color:var(--text3)">GPIO3</span><span class="sv" id="sv-g3">LOW</span></div>
-      <div class="state-row"><span style="color:var(--text3)">BC547</span><span class="sv" id="sv-bc">OFF</span></div>
-      <div class="state-row"><span style="color:var(--text3)">Relay</span><span class="sv" id="sv-rl">OFF</span></div>
-      <div class="state-row"><span style="color:var(--text3)">Máy đề</span><span class="sv" id="sv-mt">—</span></div>
-      <div class="state-row"><span style="color:var(--text3)">Packets</span><span class="sv" id="sv-pk" style="color:var(--text3)">0</span></div>
-    </div>
-
+  <div class="diag-scroll">
+    <svg id="svgNokia" viewBox="0 0 940 480" xmlns="http://www.w3.org/2000/svg"
+         style="min-width:700px;width:100%;background:#04060c;font-family:'IBM Plex Mono',monospace;">
+    </svg>
   </div>
 </div>
 </div>
 
-<!-- ════════════════ TAB 2: WIRING ════════════════ -->
-<div class="tab-content" id="tab-wire">
-<div class="wire-grid">
-
-  <!-- Full width diagram -->
-  <div class="wire-card full-w">
-    <div class="wcard-title d">📐 SƠ ĐỒ NỐI DÂY TỔNG QUAN</div>
-    <div class="diag-wrap">
-      <svg id="wireDiag" viewBox="0 0 1100 420" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Mono',monospace" style="background:#06080e;">
-        <!-- will be drawn by JS -->
-      </svg>
-    </div>
+<!-- ══════════════════════ MOTO DIAGRAM ══════════════════════ -->
+<div class="page" id="page-moto">
+<div class="diag-page">
+  <div class="diag-hd">
+    <div class="diag-hd-title" style="color:var(--orange)">🏍 ESP32-C3 #2 → BC547 → RELAY → XE MÁY</div>
+    <div class="diag-notice">💡 Rê chuột lên dây / chân để xem thông tin</div>
   </div>
-
-  <!-- Nokia side -->
-  <div class="wire-card">
-    <div class="wcard-title n">📱 NOKIA TA-1174 → ESP32-C3 #1</div>
-    <table class="conn-table">
-      <thead><tr><th>Màu dây</th><th>Từ Nokia</th><th></th><th>Đến ESP32 #1</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><span class="wire-pill wp-red">ĐỎ</span></td>
-          <td class="from">Pad B+ (3.7V)</td>
-          <td class="arr">→</td>
-          <td class="to">Chân <strong>VIN</strong></td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-blk">ĐEN</span></td>
-          <td class="from">Pad GND</td>
-          <td class="arr">→</td>
-          <td class="to">Chân <strong>GND</strong></td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-cyn">XANH</span></td>
-          <td class="from">Điểm A nút nguồn</td>
-          <td class="arr">→</td>
-          <td class="to">Chân <strong>GPIO2</strong></td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-blk">ĐEN</span></td>
-          <td class="from">Điểm B nút nguồn</td>
-          <td class="arr">→</td>
-          <td class="to">Chân <strong>GND</strong> (chung)</td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-blu">XANH DỌC</span></td>
-          <td class="from">Chân 3V3 ESP32</td>
-          <td class="arr">→</td>
-          <td class="to">10kΩ → <strong>GPIO2</strong></td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-yel">TỤ 100µF</span></td>
-          <td class="from">+ VIN  &nbsp;– GND</td>
-          <td class="arr">‖</td>
-          <td class="to">Song song lọc nguồn</td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="note-chip">⚠ Pin Nokia 3.7–4.2V vào VIN: OK (ESP32-C3 LDO chịu 6V max)</div>
-    <div class="note-chip">⚠ Không nối vào chân 3V3 output — chỉ vào VIN</div>
-  </div>
-
-  <!-- Moto side -->
-  <div class="wire-card">
-    <div class="wcard-title m">🏍️ ESP32-C3 #2 → Xe Máy</div>
-    <table class="conn-table">
-      <thead><tr><th>Màu dây</th><th>Từ</th><th></th><th>Đến</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><span class="wire-pill wp-red">ĐỎ 12V</span></td>
-          <td class="from">Bình xe (+12V)</td>
-          <td class="arr">→</td>
-          <td class="to">Buck IN+</td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-blk">ĐEN</span></td>
-          <td class="from">Bình xe (–GND)</td>
-          <td class="arr">→</td>
-          <td class="to">Buck IN– &amp; GND chung</td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-org">CAM 5V</span></td>
-          <td class="from">Buck OUT+ (5V)</td>
-          <td class="arr">→</td>
-          <td class="to">ESP32 <strong>VIN</strong> + Relay coil+</td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-blk">ĐEN</span></td>
-          <td class="from">Buck OUT–</td>
-          <td class="arr">→</td>
-          <td class="to">GND chung</td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-org">CAM</span></td>
-          <td class="from">ESP32 GPIO3</td>
-          <td class="arr">→</td>
-          <td class="to">1kΩ → Base BC547</td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-org">CAM</span></td>
-          <td class="from">Collector BC547</td>
-          <td class="arr">→</td>
-          <td class="to">Relay coil– &amp; Diode A</td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-pur">TÍM</span></td>
-          <td class="from">1N4007: K→ coil+ A→coil–</td>
-          <td class="arr">‖</td>
-          <td class="to">Bảo vệ flyback</td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-blk">ĐEN</span></td>
-          <td class="from">Emitter BC547</td>
-          <td class="arr">→</td>
-          <td class="to">GND chung</td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-grn">XANH LÁ</span></td>
-          <td class="from">Relay NO</td>
-          <td class="arr">→</td>
-          <td class="to">Nút đề xe (chân 1)</td>
-        </tr>
-        <tr>
-          <td><span class="wire-pill wp-grn">XANH LÁ</span></td>
-          <td class="from">Relay COM</td>
-          <td class="arr">→</td>
-          <td class="to">Nút đề xe (chân 2)</td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="note-chip">⚠ Relay NO+COM đấu <strong>song song</strong> với nút đề gốc — KHÔNG cắt dây gốc</div>
-    <div class="note-chip">⚠ Chỉnh Buck ra đúng 5V bằng biến trở trước khi nối ESP32</div>
-  </div>
-
-  <!-- Pin map full width -->
-  <div class="wire-card full-w">
-    <div class="wcard-title d">📌 BẢN ĐỒ CHÂN CHI TIẾT</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div>
-        <div style="font-size:.7rem;color:var(--cyan);margin-bottom:8px;letter-spacing:1px;">ESP32-C3 #1 (Nokia side)</div>
-        <table class="conn-table">
-          <thead><tr><th>Chân ESP32</th><th>Nối với</th><th>Ghi chú</th></tr></thead>
-          <tbody>
-            <tr><td style="color:#ff4466">VIN</td><td>B+ Nokia (3.7V)</td><td style="color:var(--text3);font-size:.6rem">Nguồn từ pin Nokia</td></tr>
-            <tr><td style="color:#4a6070">GND</td><td>GND Nokia + Điểm B</td><td style="color:var(--text3);font-size:.6rem">Mass chung</td></tr>
-            <tr><td style="color:#6ba3ff">3V3</td><td>10kΩ (đầu 1)</td><td style="color:var(--text3);font-size:.6rem">Nguồn pull-up</td></tr>
-            <tr><td style="color:var(--cyan)">GPIO2</td><td>Điểm A + 10kΩ (đầu 2)</td><td style="color:var(--text3);font-size:.6rem">Input nút nguồn</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div>
-        <div style="font-size:.7rem;color:var(--orange);margin-bottom:8px;letter-spacing:1px;">ESP32-C3 #2 (Xe máy side)</div>
-        <table class="conn-table">
-          <thead><tr><th>Chân ESP32</th><th>Nối với</th><th>Ghi chú</th></tr></thead>
-          <tbody>
-            <tr><td style="color:#cc5500">VIN</td><td>Buck OUT+ (5V)</td><td style="color:var(--text3);font-size:.6rem">5V từ bình 12V</td></tr>
-            <tr><td style="color:#4a6070">GND</td><td>GND chung xe</td><td style="color:var(--text3);font-size:.6rem">Mass xe máy</td></tr>
-            <tr><td style="color:var(--orange)">GPIO3</td><td>1kΩ → Base BC547</td><td style="color:var(--text3);font-size:.6rem">Output kích BC547</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-</div>
-</div>
-
-<!-- ════════════════ TAB 3: MECHANISM ════════════════ -->
-<div class="tab-content" id="tab-mech">
-<div class="mech-intro">
-  Hệ thống sử dụng giao thức <strong>ESP-NOW</strong> — kết nối ngang hàng (peer-to-peer) không cần WiFi router.
-  Khi nhấn giữ nút nguồn Nokia, ESP32-C3 #1 phát gói tin đến ESP32-C3 #2 trong phạm vi ~200m ngoài trời.
-  ESP32-C3 #2 kích transistor BC547 → đóng relay → mô phỏng nhấn nút đề xe.
-</div>
-
-<div class="steps">
-  <div class="step s1">
-    <div class="step-num">01</div>
-    <div class="step-body">
-      <div class="step-title">NHẤN NÚT NGUỒN NOKIA</div>
-      <div class="step-desc">Nút nguồn Nokia TA-1174 có 2 điểm tiếp xúc A và B trên PCB. Bình thường A và B hở mạch. Khi nhấn, A nối B → tạo cầu nối đến GND. Điện trở 10kΩ pull-up giữ GPIO2 ở mức HIGH (3.3V). Khi A–B đóng, GPIO2 bị kéo xuống GND → mức LOW (0V).</div>
-      <div class="step-timing">⏱ 0ms — phản hồi tức thì</div>
-      <div class="step-code">
-        <span class="kw">if</span> (digitalRead(GPIO_NUM_2) == LOW) {<br>
-        &nbsp;&nbsp;buttonPressed = <span class="kw">true</span>;<br>
-        }
-      </div>
-    </div>
-  </div>
-  <div class="step s2">
-    <div class="step-num">02</div>
-    <div class="step-body">
-      <div class="step-title">ESP32-C3 #1 PHÁT HIỆN THAY ĐỔI</div>
-      <div class="step-desc">ESP32-C3 #1 liên tục đọc GPIO2 trong vòng lặp. Khi phát hiện HIGH→LOW, nó đánh dấu nút được nhấn và chuẩn bị gói tin ESP-NOW chứa lệnh START.</div>
-      <div class="step-timing">⏱ ~10ms — polling 50ms/lần</div>
-    </div>
-  </div>
-  <div class="step s3">
-    <div class="step-num">03</div>
-    <div class="step-body">
-      <div class="step-title">GỬI GÓI TIN ESP-NOW</div>
-      <div class="step-desc">ESP-NOW là giao thức không dây của Espressif hoạt động ở tầng 2 (MAC layer), không cần router. Gói tin nhỏ (≤250 byte), độ trễ &lt;1ms. ESP32-C3 #1 gửi gói START đến địa chỉ MAC của ESP32-C3 #2. Cứ 100ms gửi 1 lần trong khi nhấn giữ.</div>
-      <div class="step-timing">⏱ ~120ms từ lúc nhấn</div>
-      <div class="step-code">
-        <span class="kw">typedef struct</span> { <span class="kw">bool</span> start; } Msg;<br>
-        Msg msg = {.<span class="kw">start</span> = <span class="kw">true</span>};<br>
-        esp_now_send(peerMAC, (<span class="kw">uint8_t</span>*)&amp;msg, <span class="kw">sizeof</span>(msg));
-      </div>
-    </div>
-  </div>
-  <div class="step s4">
-    <div class="step-num">04</div>
-    <div class="step-body">
-      <div class="step-title">ESP32-C3 #2 NHẬN GÓI TIN</div>
-      <div class="step-desc">ESP32-C3 #2 lắng nghe trên cùng kênh WiFi. Khi nhận gói START, callback onDataRecv() được gọi. ESP32-C3 #2 xuất GPIO3 lên mức HIGH (3.3V) → kích transistor BC547.</div>
-      <div class="step-timing">⏱ ~350ms (bao gồm trễ không dây)</div>
-      <div class="step-code">
-        <span class="kw">void</span> onDataRecv(<span class="kw">const</span> uint8_t* mac, <span class="kw">const</span> uint8_t* data, <span class="kw">int</span> len) {<br>
-        &nbsp;&nbsp;Msg* msg = (Msg*)data;<br>
-        &nbsp;&nbsp;digitalWrite(GPIO_NUM_3, msg->start ? HIGH : LOW);<br>
-        }
-      </div>
-    </div>
-  </div>
-  <div class="step s5">
-    <div class="step-num">05</div>
-    <div class="step-body">
-      <div class="step-title">TRANSISTOR BC547 DẪN ĐIỆN</div>
-      <div class="step-desc">GPIO3 (3.3V) → điện trở 1kΩ → chân Base (B) của BC547. Dòng Base ≈ (3.3V – 0.7V) / 1kΩ ≈ 2.6mA. BC547 có hfe ≈ 200, dòng Collector tối đa ≈ 100mA — đủ để kéo cuộn coil relay (thường 70–100mA). Transistor hoạt động ở vùng bão hòa (saturation), nối Collector với Emitter.</div>
-      <div class="step-timing">⏱ ~480ms — tức thì khi GPIO3 HIGH</div>
-    </div>
-  </div>
-  <div class="step s6">
-    <div class="step-num">06</div>
-    <div class="step-body">
-      <div class="step-title">RELAY ĐÓNG TIẾP ĐIỂM</div>
-      <div class="step-desc">Dòng điện chạy qua cuộn coil relay 5V → sinh từ trường → kéo cần tiếp điểm → NO (Normally Open) nối với COM. Diode 1N4007 mắc ngược song song với cuộn coil để triệt xung điện áp ngược (flyback) khi relay tắt, bảo vệ BC547 và ESP32. Relay COM+NO được đấu song song với nút đề xe máy gốc.</div>
-      <div class="step-timing">⏱ ~620ms — relay tác động trong ~10ms</div>
-    </div>
-  </div>
-  <div class="step s7">
-    <div class="step-num">07</div>
-    <div class="step-body">
-      <div class="step-title">XE MÁY KHỞI ĐỘNG</div>
-      <div class="step-desc">Relay đóng → mô phỏng nhấn nút đề xe → máy đề quay → xe khởi động. Khi thả nút nguồn Nokia: GPIO2 HIGH → ESP-NOW gửi gói STOP → GPIO3 LOW → BC547 ngắt → relay mở → máy đề dừng. Toàn bộ dây gốc của xe không bị cắt, relay chỉ là công tắc thêm vào.</div>
-      <div class="step-timing">⏱ ~720ms từ lúc nhấn đến xe đề</div>
-    </div>
-  </div>
-</div>
-
-<!-- Timing bar -->
-<div class="timing-bar">
-  <div class="tb-title">TIMELINE — ĐỘ TRỄ TOÀN BỘ</div>
-  <div style="position:relative;height:36px;background:#060a0f;border-radius:4px;overflow:hidden;">
-    <div style="position:absolute;top:0;left:0%;width:9%;height:100%;background:rgba(0,200,255,.18);display:flex;align-items:center;justify-content:center;font-size:.58rem;color:var(--cyan);font-family:var(--head);">GPIO</div>
-    <div style="position:absolute;top:0;left:9%;width:12%;height:100%;background:rgba(0,255,136,.12);display:flex;align-items:center;justify-content:center;font-size:.58rem;color:var(--green);font-family:var(--head);">SEND</div>
-    <div style="position:absolute;top:0;left:21%;width:18%;height:100%;background:rgba(59,130,246,.12);display:flex;align-items:center;justify-content:center;font-size:.55rem;color:var(--blue);font-family:var(--head);">WIRELESS</div>
-    <div style="position:absolute;top:0;left:39%;width:10%;height:100%;background:rgba(255,122,0,.15);display:flex;align-items:center;justify-content:center;font-size:.58rem;color:var(--orange);font-family:var(--head);">GPIO3</div>
-    <div style="position:absolute;top:0;left:49%;width:13%;height:100%;background:rgba(168,85,247,.12);display:flex;align-items:center;justify-content:center;font-size:.58rem;color:#c084fc;font-family:var(--head);">BC547</div>
-    <div style="position:absolute;top:0;left:62%;width:15%;height:100%;background:rgba(255,122,0,.18);display:flex;align-items:center;justify-content:center;font-size:.58rem;color:var(--orange);font-family:var(--head);">RELAY</div>
-    <div style="position:absolute;top:0;left:77%;width:23%;height:100%;background:rgba(0,255,136,.2);display:flex;align-items:center;justify-content:center;font-size:.58rem;color:var(--green);font-family:var(--head);font-weight:bold;">⚡ ĐỀ XE</div>
-  </div>
-  <div style="display:flex;justify-content:space-between;font-size:.58rem;color:var(--text3);margin-top:5px;padding:0 2px;">
-    <span>0ms</span><span>120ms</span><span>350ms</span><span>480ms</span><span>620ms</span><span>720ms+</span>
+  <div class="diag-scroll">
+    <svg id="svgMoto" viewBox="0 0 1060 480" xmlns="http://www.w3.org/2000/svg"
+         style="min-width:800px;width:100%;background:#04060c;font-family:'IBM Plex Mono',monospace;">
+    </svg>
   </div>
 </div>
 </div>
 
-<!-- ════════════════ TAB 4: COMPONENTS ════════════════ -->
-<div class="tab-content" id="tab-parts">
-<div class="parts-summary">
-  <div class="sum-item"><span class="sum-label">Tổng linh kiện:</span><span class="sum-val">11 loại</span></div>
-  <div class="sum-item"><span class="sum-label">Nokia side:</span><span class="sum-val">4 loại</span></div>
-  <div class="sum-item"><span class="sum-label">Xe máy side:</span><span class="sum-val">7 loại</span></div>
-  <div class="sum-item"><span class="sum-label">ESP32-C3:</span><span class="sum-val">×2</span></div>
+<!-- ══════════════════════ MECHANISM ══════════════════════ -->
+<div class="page" id="page-mech">
+<div class="mech-page">
+<div class="intro">Hệ thống dùng <strong>ESP-NOW</strong> — giao thức P2P tầng MAC, không cần WiFi router, trễ &lt;2ms, tầm ~200m ngoài trời. Nhấn giữ nút nguồn Nokia → ESP32-C3 #1 phát gói tin → ESP32-C3 #2 kích BC547 → đóng relay → mô phỏng nhấn nút đề xe.</div>
+<div class="step s1"><div class="snum">01</div><div class="sbod">
+  <div class="stit">NHẤN NÚT NGUỒN NOKIA</div>
+  <div class="sdsc">Điểm A và B trên PCB Nokia bình thường hở mạch. Điện trở 10kΩ pull-up giữ GPIO2 = HIGH (3.3V). Khi nhấn nút, A nối B → GPIO2 bị kéo xuống GND → mức LOW (0V). ESP32-C3 polling mỗi 50ms sẽ phát hiện thay đổi.</div>
+  <div class="stm">⏱ 0ms — tức thì</div>
+  <div class="scode"><span class="kw">if</span> (digitalRead(GPIO_NUM_2) == LOW) { btnPressed = <span class="kw">true</span>; }</div>
+</div></div>
+<div class="step s2"><div class="snum">02</div><div class="sbod">
+  <div class="stit">ESP32-C3 #1 CHUẨN BỊ GÓI TIN</div>
+  <div class="sdsc">Phát hiện HIGH→LOW trên GPIO2 → đánh dấu nút nhấn → tạo struct Message{start:true} → gọi esp_now_send() đến địa chỉ MAC đã đăng ký của ESP32-C3 #2.</div>
+  <div class="stm">⏱ ~50–120ms</div>
+</div></div>
+<div class="step s3"><div class="snum">03</div><div class="sbod">
+  <div class="stit">TRUYỀN ESP-NOW</div>
+  <div class="sdsc">ESP-NOW hoạt động ở tầng 2 (MAC layer) của WiFi 2.4GHz, không cần router hay IP. Gói tin ≤250 byte, overhead thấp, độ trễ &lt;2ms trong tầm phủ. Trong khi giữ nút, gói tin được gửi lại mỗi 100ms để đảm bảo relay tiếp tục đóng.</div>
+  <div class="stm">⏱ ~120ms từ lúc nhấn · Tầm ~200m ngoài trời</div>
+  <div class="scode">esp_now_send(peerMAC, (<span class="kw">uint8_t</span>*)&amp;msg, <span class="kw">sizeof</span>(msg)); <span class="kw">// msg.start = true</span></div>
+</div></div>
+<div class="step s4"><div class="snum">04</div><div class="sbod">
+  <div class="stit">ESP32-C3 #2 NHẬN & KÍCH GPIO3</div>
+  <div class="sdsc">Callback onDataRecv() được gọi ngay khi nhận gói. Kiểm tra msg.start == true → xuất GPIO3 = HIGH (3.3V) → dòng điện chạy qua 1kΩ vào chân Base của BC547.</div>
+  <div class="stm">⏱ ~380ms (bao gồm wireless latency)</div>
+  <div class="scode"><span class="kw">void</span> onDataRecv(<span class="kw">const uint8_t</span>* mac, <span class="kw">const uint8_t</span>* data, <span class="kw">int</span> len) {<br>&nbsp;&nbsp;Msg* m=(Msg*)data; digitalWrite(GPIO_NUM_3, m->start ? HIGH : LOW);<br>}</div>
+</div></div>
+<div class="step s5"><div class="snum">05</div><div class="sbod">
+  <div class="stit">BC547 DẪN ĐIỆN (SATURATION)</div>
+  <div class="sdsc">Dòng Base = (3.3V − 0.7V) / 1kΩ ≈ 2.6mA. BC547 có hFE ≈ 200, dòng Collector tối đa 100mA. Relay SRD-05VDC cần ~70–90mA — nằm trong ngưỡng. BC547 vào vùng bão hòa: Collector gần như nối với Emitter → dòng chạy qua cuộn coil relay.</div>
+  <div class="stm">⏱ ~480ms — tức thì khi GPIO3 HIGH</div>
+</div></div>
+<div class="step s6"><div class="snum">06</div><div class="sbod">
+  <div class="stit">RELAY ĐÓNG — DIODE BẢO VỆ</div>
+  <div class="sdsc">Dòng qua cuộn coil → từ trường → kéo cần tiếp điểm → NO nối COM. Khi tắt relay, cuộn dây sinh xung điện áp ngược (flyback) rất cao — 1N4007 mắc ngược song song với cuộn triệt xung này, bảo vệ BC547 và ESP32. Relay NO+COM đấu song song nút đề gốc của xe — không cắt dây gốc.</div>
+  <div class="stm">⏱ ~620ms — relay tác động trong ~10ms</div>
+</div></div>
+<div class="step s7"><div class="snum">07</div><div class="sbod">
+  <div class="stit">XE MÁY KHỞI ĐỘNG</div>
+  <div class="sdsc">Relay đóng mô phỏng nhấn nút đề → máy đề quay → xe khởi động. Khi thả nút Nokia: GPIO2=HIGH → gửi STOP → GPIO3=LOW → BC547 ngắt → relay mở → máy đề dừng. Toàn bộ dây điện gốc của xe giữ nguyên, hệ thống chỉ là công tắc song song.</div>
+  <div class="stm">⏱ ~720ms tổng từ lúc nhấn đến xe đề</div>
+</div></div>
+<div class="tl-wrap">
+  <div style="font-family:var(--head);font-size:.75rem;color:var(--dim2);letter-spacing:2px;margin-bottom:8px;">TIMELINE</div>
+  <div class="tl-bar">
+    <div class="tl-seg" style="width:9%;background:rgba(0,200,255,.18);color:var(--cyan)">GPIO</div>
+    <div class="tl-seg" style="width:10%;background:rgba(0,255,136,.12);color:var(--green)">SEND</div>
+    <div class="tl-seg" style="width:20%;background:rgba(68,136,255,.1);color:var(--blue)">WIRELESS</div>
+    <div class="tl-seg" style="width:9%;background:rgba(255,122,0,.14);color:var(--orange)">IO3</div>
+    <div class="tl-seg" style="width:12%;background:rgba(168,85,247,.12);color:var(--purple)">BC547</div>
+    <div class="tl-seg" style="width:17%;background:rgba(255,196,0,.1);color:var(--yellow)">RELAY</div>
+    <div class="tl-seg" style="width:23%;background:rgba(0,255,136,.18);color:var(--green);font-weight:700">⚡ ĐỀ XE</div>
+  </div>
+  <div class="tl-ts"><span>0ms</span><span>120ms</span><span>350ms</span><span>480ms</span><span>620ms</span><span>720ms+</span></div>
 </div>
-
-<div class="part-cards">
-
-  <div class="pc-b"><div class="part-card">
-    <div class="part-header">
-      <div class="part-name" style="color:var(--green)">ESP32-C3 Mini</div>
-      <div class="part-qty" style="color:var(--green);border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.06)">×2</div>
-      <span class="badge bd-b">Cả 2 mạch</span>
-    </div>
-    <div class="part-specs">
-      <div class="spec-row"><span class="sk">CPU:</span><span class="sv2">RISC-V 160MHz</span></div>
-      <div class="spec-row"><span class="sk">Flash:</span><span class="sv2">4MB</span></div>
-      <div class="spec-row"><span class="sk">WiFi:</span><span class="sv2">802.11b/g/n 2.4GHz</span></div>
-      <div class="spec-row"><span class="sk">BLE:</span><span class="sv2">5.0</span></div>
-      <div class="spec-row"><span class="sk">ESP-NOW:</span><span class="sv2">Max 250 byte/gói</span></div>
-      <div class="spec-row"><span class="sk">VIN range:</span><span class="sv2">3.3V – 6V (LDO 3.3V)</span></div>
-      <div class="spec-row"><span class="sk">GPIO:</span><span class="sv2">3.3V logic, 40mA/pin max</span></div>
-      <div class="spec-row"><span class="sk">Kích thước:</span><span class="sv2">13.2 × 16.6mm</span></div>
-      <div class="spec-row"><span class="sk">Tầm phủ:</span><span class="sv2">~200m ngoài trời</span></div>
-    </div>
-    <div class="part-note">Lấy MAC bằng: Serial.println(WiFi.macAddress()) rồi điền vào peer của #1</div>
-  </div></div>
-
-  <div class="pc-n"><div class="part-card">
-    <div class="part-header">
-      <div class="part-name" style="color:var(--cyan)">Điện trở 10kΩ</div>
-      <div class="part-qty" style="color:var(--cyan);border-color:rgba(0,200,255,.3);background:rgba(0,200,255,.06)">×1</div>
-      <span class="badge bd-n">Nokia</span>
-    </div>
-    <div class="part-specs">
-      <div class="spec-row"><span class="sk">Giá trị:</span><span class="sv2">10,000 Ω (10kΩ)</span></div>
-      <div class="spec-row"><span class="sk">Sai số:</span><span class="sv2">±5% (vàng) hoặc ±1%</span></div>
-      <div class="spec-row"><span class="sk">Công suất:</span><span class="sv2">1/4W (0.25W)</span></div>
-      <div class="spec-row"><span class="sk">Màu band:</span><span class="sv2">Nâu Đen Cam Vàng</span></div>
-      <div class="spec-row"><span class="sk">Chức năng:</span><span class="sv2">Pull-up GPIO2 lên 3.3V</span></div>
-      <div class="spec-row"><span class="sk">Dòng:</span><span class="sv2">3.3V/10k = 0.33mA</span></div>
-    </div>
-    <div class="part-note">Đầu 1 → 3V3 · Đầu 2 → GPIO2 &amp; Điểm A nút nguồn</div>
-  </div></div>
-
-  <div class="pc-m"><div class="part-card">
-    <div class="part-header">
-      <div class="part-name" style="color:var(--orange)">Điện trở 1kΩ</div>
-      <div class="part-qty" style="color:var(--orange);border-color:rgba(255,122,0,.3);background:rgba(255,122,0,.06)">×1</div>
-      <span class="badge bd-m">Xe máy</span>
-    </div>
-    <div class="part-specs">
-      <div class="spec-row"><span class="sk">Giá trị:</span><span class="sv2">1,000 Ω (1kΩ)</span></div>
-      <div class="spec-row"><span class="sk">Sai số:</span><span class="sv2">±5%</span></div>
-      <div class="spec-row"><span class="sk">Công suất:</span><span class="sv2">1/4W</span></div>
-      <div class="spec-row"><span class="sk">Màu band:</span><span class="sv2">Nâu Đen Đỏ Vàng</span></div>
-      <div class="spec-row"><span class="sk">Chức năng:</span><span class="sv2">Giới hạn dòng Base BC547</span></div>
-      <div class="spec-row"><span class="sk">Dòng Base:</span><span class="sv2">(3.3–0.7)/1k = 2.6mA</span></div>
-    </div>
-    <div class="part-note">GPIO3 → 1kΩ → Base BC547</div>
-  </div></div>
-
-  <div class="pc-m"><div class="part-card">
-    <div class="part-header">
-      <div class="part-name" style="color:var(--orange)">Transistor BC547</div>
-      <div class="part-qty" style="color:var(--orange);border-color:rgba(255,122,0,.3);background:rgba(255,122,0,.06)">×1</div>
-      <span class="badge bd-m">Xe máy</span>
-    </div>
-    <div class="part-specs">
-      <div class="spec-row"><span class="sk">Loại:</span><span class="sv2">NPN BJT</span></div>
-      <div class="spec-row"><span class="sk">Vce max:</span><span class="sv2">45V</span></div>
-      <div class="spec-row"><span class="sk">Ic max:</span><span class="sv2">100mA</span></div>
-      <div class="spec-row"><span class="sk">hFE:</span><span class="sv2">110–800 (typ 200)</span></div>
-      <div class="spec-row"><span class="sk">Vbe:</span><span class="sv2">~0.7V</span></div>
-      <div class="spec-row"><span class="sk">Package:</span><span class="sv2">TO-92 (B·C·E từ trái)</span></div>
-      <div class="spec-row"><span class="sk">Thay thế:</span><span class="sv2">2N2222, S9013, BC337</span></div>
-    </div>
-    <div class="part-note">B←1kΩ←GPIO3 · C→Relay coil– · E→GND</div>
-  </div></div>
-
-  <div class="pc-m"><div class="part-card">
-    <div class="part-header">
-      <div class="part-name" style="color:var(--orange)">Relay SRD-05VDC</div>
-      <div class="part-qty" style="color:var(--orange);border-color:rgba(255,122,0,.3);background:rgba(255,122,0,.06)">×1</div>
-      <span class="badge bd-m">Xe máy</span>
-    </div>
-    <div class="part-specs">
-      <div class="spec-row"><span class="sk">Coil:</span><span class="sv2">5VDC, ~70–90mA</span></div>
-      <div class="spec-row"><span class="sk">Tiếp điểm:</span><span class="sv2">10A / 250VAC</span></div>
-      <div class="spec-row"><span class="sk">Loại:</span><span class="sv2">SPDT (COM, NO, NC)</span></div>
-      <div class="spec-row"><span class="sk">Dùng:</span><span class="sv2">COM và NO</span></div>
-      <div class="spec-row"><span class="sk">Tác động:</span><span class="sv2">~10ms</span></div>
-      <div class="spec-row"><span class="sk">Size:</span><span class="sv2">19×15×15mm</span></div>
-    </div>
-    <div class="part-note">NO+COM song song nút đề · Coil+ từ 5V · Coil– qua BC547→GND</div>
-  </div></div>
-
-  <div class="pc-m"><div class="part-card">
-    <div class="part-header">
-      <div class="part-name" style="color:#c084fc">Diode 1N4007</div>
-      <div class="part-qty" style="color:#c084fc;border-color:rgba(168,85,247,.3);background:rgba(168,85,247,.06)">×1</div>
-      <span class="badge bd-m">Xe máy</span>
-    </div>
-    <div class="part-specs">
-      <div class="spec-row"><span class="sk">Loại:</span><span class="sv2">Rectifier diode</span></div>
-      <div class="spec-row"><span class="sk">Vrrm:</span><span class="sv2">1000V</span></div>
-      <div class="spec-row"><span class="sk">If max:</span><span class="sv2">1A</span></div>
-      <div class="spec-row"><span class="sk">Vf:</span><span class="sv2">~1V</span></div>
-      <div class="spec-row"><span class="sk">Package:</span><span class="sv2">DO-41 (vạch = Cathode)</span></div>
-      <div class="spec-row"><span class="sk">Chức năng:</span><span class="sv2">Flyback suppression</span></div>
-    </div>
-    <div class="part-note">Cathode (vạch trắng) → coil+ (5V) · Anode → coil– (collector)</div>
-  </div></div>
-
-  <div class="pc-m"><div class="part-card">
-    <div class="part-header">
-      <div class="part-name" style="color:var(--orange)">Buck LM2596</div>
-      <div class="part-qty" style="color:var(--orange);border-color:rgba(255,122,0,.3);background:rgba(255,122,0,.06)">×1</div>
-      <span class="badge bd-m">Xe máy</span>
-    </div>
-    <div class="part-specs">
-      <div class="spec-row"><span class="sk">Input:</span><span class="sv2">4.5V – 40V</span></div>
-      <div class="spec-row"><span class="sk">Output:</span><span class="sv2">1.23V – 37V (điều chỉnh)</span></div>
-      <div class="spec-row"><span class="sk">Dòng max:</span><span class="sv2">3A</span></div>
-      <div class="spec-row"><span class="sk">Hiệu suất:</span><span class="sv2">~92%</span></div>
-      <div class="spec-row"><span class="sk">Tần số:</span><span class="sv2">150kHz</span></div>
-      <div class="spec-row"><span class="sk">Điều chỉnh:</span><span class="sv2">Biến trở (vặn đến 5V)</span></div>
-    </div>
-    <div class="part-note">Chỉnh đúng 5V trước khi nối ESP32. Đo bằng VOM!</div>
-  </div></div>
-
-  <div class="pc-b"><div class="part-card">
-    <div class="part-header">
-      <div class="part-name" style="color:var(--green2)">Tụ điện 100µF</div>
-      <div class="part-qty" style="color:var(--green2);border-color:rgba(0,204,102,.3);background:rgba(0,204,102,.06)">×2</div>
-      <span class="badge bd-b">Cả 2 mạch</span>
-    </div>
-    <div class="part-specs">
-      <div class="spec-row"><span class="sk">Dung lượng:</span><span class="sv2">100µF</span></div>
-      <div class="spec-row"><span class="sk">Điện áp:</span><span class="sv2">16V (Nokia) / 25V (xe)</span></div>
-      <div class="spec-row"><span class="sk">Loại:</span><span class="sv2">Electrolytic (phân cực)</span></div>
-      <div class="spec-row"><span class="sk">Cực +:</span><span class="sv2">Chân dài hơn</span></div>
-      <div class="spec-row"><span class="sk">Cực –:</span><span class="sv2">Vạch âm trên vỏ</span></div>
-      <div class="spec-row"><span class="sk">Chức năng:</span><span class="sv2">Lọc nguồn, tránh voltage drop</span></div>
-    </div>
-    <div class="part-note">Mắc song song với VIN–GND của mỗi ESP32. Chú ý chiều +/–</div>
-  </div></div>
-
 </div>
 </div>
 
-<!-- ════════════════ JS ════════════════ -->
+<!-- ══════════════════════ PARTS ══════════════════════ -->
+<div class="page" id="page-parts">
+<div class="parts-page">
+<div style="background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:10px 14px;margin-bottom:12px;display:flex;gap:18px;flex-wrap:wrap;font-size:.7rem;">
+  <span><span style="color:var(--dim2)">Tổng:</span><b style="color:var(--yellow);margin-left:5px">8 loại · 12 linh kiện</b></span>
+  <span><span style="color:var(--dim2)">Nokia side:</span><b style="color:var(--cyan);margin-left:5px">3 loại</b></span>
+  <span><span style="color:var(--dim2)">Xe máy:</span><b style="color:var(--orange);margin-left:5px">5 loại</b></span>
+  <span><span style="color:var(--dim2)">Cả hai:</span><b style="color:var(--green);margin-left:5px">2 loại (ESP32-C3, Tụ)</b></span>
+</div>
+<div class="pgrid">
+<div class="pb2"><div class="pcard"><div class="ph2"><div class="pnam" style="color:var(--green)">ESP32-C3 Mini</div><div class="pqty" style="color:var(--green);border-color:rgba(0,255,136,.3)">×2</div><span class="bdg bb">Cả 2</span></div><div class="psp">
+<div class="pr"><span class="psk">CPU</span><span class="psv">RISC-V 160MHz single-core</span></div>
+<div class="pr"><span class="psk">Flash/RAM</span><span class="psv">4MB / 400KB SRAM</span></div>
+<div class="pr"><span class="psk">WiFi</span><span class="psv">802.11b/g/n 2.4GHz</span></div>
+<div class="pr"><span class="psk">ESP-NOW</span><span class="psv">P2P, ≤250 byte/packet</span></div>
+<div class="pr"><span class="psk">VIN range</span><span class="psv">3.3V–6V (LDO nội 3.3V)</span></div>
+<div class="pr"><span class="psk">GPIO logic</span><span class="psv">3.3V, 40mA/pin max</span></div>
+<div class="pr"><span class="psk">Tầm ESP-NOW</span><span class="psv">~200m ngoài trời</span></div>
+<div class="pr"><span class="psk">Size</span><span class="psv">13.2 × 16.6mm</span></div>
+</div><div class="pnote">⚠ Flash code lấy MAC: Serial.println(WiFi.macAddress()) → điền vào receiverMAC[] của ESP32 #1</div></div></div>
+
+<div class="pn"><div class="pcard"><div class="ph2"><div class="pnam" style="color:var(--cyan)">Điện trở 10kΩ</div><div class="pqty" style="color:var(--cyan);border-color:rgba(0,200,255,.3)">×1</div><span class="bdg bn">Nokia</span></div><div class="psp">
+<div class="pr"><span class="psk">Giá trị</span><span class="psv">10,000 Ω (10kΩ)</span></div>
+<div class="pr"><span class="psk">Sai số</span><span class="psv">±5% (band vàng)</span></div>
+<div class="pr"><span class="psk">Công suất</span><span class="psv">1/4W (0.25W)</span></div>
+<div class="pr"><span class="psk">Mã màu</span><span class="psv">Nâu · Đen · Cam · Vàng</span></div>
+<div class="pr"><span class="psk">Dòng qua</span><span class="psv">3.3V ÷ 10kΩ = 0.33mA</span></div>
+<div class="pr"><span class="psk">Chức năng</span><span class="psv">Pull-up GPIO2 → 3.3V khi nút hở</span></div>
+</div><div class="pnote">Đầu 1 → 3V3 · Đầu 2 → GPIO2 & Điểm A nút nguồn</div></div></div>
+
+<div class="pm"><div class="pcard"><div class="ph2"><div class="pnam" style="color:var(--orange)">Điện trở 1kΩ</div><div class="pqty" style="color:var(--orange);border-color:rgba(255,122,0,.3)">×1</div><span class="bdg bm">Xe máy</span></div><div class="psp">
+<div class="pr"><span class="psk">Giá trị</span><span class="psv">1,000 Ω (1kΩ)</span></div>
+<div class="pr"><span class="psk">Sai số</span><span class="psv">±5%</span></div>
+<div class="pr"><span class="psk">Công suất</span><span class="psv">1/4W</span></div>
+<div class="pr"><span class="psk">Mã màu</span><span class="psv">Nâu · Đen · Đỏ · Vàng</span></div>
+<div class="pr"><span class="psk">Dòng Base</span><span class="psv">(3.3−0.7) ÷ 1000 = 2.6mA</span></div>
+<div class="pr"><span class="psk">Chức năng</span><span class="psv">Giới hạn dòng Base BC547</span></div>
+</div><div class="pnote">GPIO3 → 1kΩ → Base (B) của BC547</div></div></div>
+
+<div class="pm"><div class="pcard"><div class="ph2"><div class="pnam" style="color:var(--orange)">BC547 NPN</div><div class="pqty" style="color:var(--orange);border-color:rgba(255,122,0,.3)">×1</div><span class="bdg bm">Xe máy</span></div><div class="psp">
+<div class="pr"><span class="psk">Loại</span><span class="psv">NPN BJT Transistor</span></div>
+<div class="pr"><span class="psk">Vceo max</span><span class="psv">45V</span></div>
+<div class="pr"><span class="psk">Ic max</span><span class="psv">100mA</span></div>
+<div class="pr"><span class="psk">hFE (β)</span><span class="psv">110–800 (typ 200)</span></div>
+<div class="pr"><span class="psk">Vbe sat</span><span class="psv">~0.7V</span></div>
+<div class="pr"><span class="psk">Package</span><span class="psv">TO-92 (B·C·E trái→phải)</span></div>
+<div class="pr"><span class="psk">Thay thế</span><span class="psv">2N2222A, S9013, BC337</span></div>
+</div><div class="pnote">B←1kΩ←GPIO3 · C→coil−(Relay) · E→GND</div></div></div>
+
+<div class="pm"><div class="pcard"><div class="ph2"><div class="pnam" style="color:var(--orange)">Relay SRD-05VDC</div><div class="pqty" style="color:var(--orange);border-color:rgba(255,122,0,.3)">×1</div><span class="bdg bm">Xe máy</span></div><div class="psp">
+<div class="pr"><span class="psk">Coil</span><span class="psv">5VDC, ~70–90mA</span></div>
+<div class="pr"><span class="psk">Tiếp điểm</span><span class="psv">10A / 250VAC</span></div>
+<div class="pr"><span class="psk">Loại</span><span class="psv">SPDT (COM · NO · NC)</span></div>
+<div class="pr"><span class="psk">Dùng</span><span class="psv">COM và NO</span></div>
+<div class="pr"><span class="psk">Tác động</span><span class="psv">~10ms</span></div>
+<div class="pr"><span class="psk">Kích thước</span><span class="psv">19 × 15 × 15mm</span></div>
+</div><div class="pnote">NO+COM song song nút đề gốc · Coil+←5V · Coil−←Collector BC547</div></div></div>
+
+<div class="pp"><div class="pcard"><div class="ph2"><div class="pnam" style="color:var(--purple)">Diode 1N4007</div><div class="pqty" style="color:var(--purple);border-color:rgba(168,85,247,.3)">×1</div><span class="bdg bp">Xe máy</span></div><div class="psp">
+<div class="pr"><span class="psk">Vrrm</span><span class="psv">1000V</span></div>
+<div class="pr"><span class="psk">If max</span><span class="psv">1A</span></div>
+<div class="pr"><span class="psk">Vf</span><span class="psv">~1V</span></div>
+<div class="pr"><span class="psk">Package</span><span class="psv">DO-41 (vạch = Cathode)</span></div>
+<div class="pr"><span class="psk">Chức năng</span><span class="psv">Flyback suppression diode</span></div>
+<div class="pr"><span class="psk">Mắc</span><span class="psv">Ngược chiều // cuộn relay</span></div>
+</div><div class="pnote">Cathode(vạch)→coil+(5V) · Anode→coil−(Collector)</div></div></div>
+
+<div class="pm"><div class="pcard"><div class="ph2"><div class="pnam" style="color:var(--orange)">Buck LM2596</div><div class="pqty" style="color:var(--orange);border-color:rgba(255,122,0,.3)">×1</div><span class="bdg bm">Xe máy</span></div><div class="psp">
+<div class="pr"><span class="psk">Vin</span><span class="psv">4.5V – 40V</span></div>
+<div class="pr"><span class="psk">Vout</span><span class="psv">1.23V–37V (biến trở)</span></div>
+<div class="pr"><span class="psk">Iout max</span><span class="psv">3A liên tục</span></div>
+<div class="pr"><span class="psk">Hiệu suất</span><span class="psv">~92%</span></div>
+<div class="pr"><span class="psk">Tần số sw</span><span class="psv">150kHz</span></div>
+</div><div class="pnote">⚠ PHẢI chỉnh đúng 5.00V và đo VOM trước khi cắm ESP32. Sai điện áp = cháy chip!</div></div></div>
+
+<div class="pb2"><div class="pcard"><div class="ph2"><div class="pnam" style="color:var(--green)">Tụ 100µF</div><div class="pqty" style="color:var(--green);border-color:rgba(0,255,136,.3)">×2</div><span class="bdg bb">Cả 2</span></div><div class="psp">
+<div class="pr"><span class="psk">Dung lượng</span><span class="psv">100µF</span></div>
+<div class="pr"><span class="psk">Điện áp</span><span class="psv">16V (Nokia) · 25V (xe máy)</span></div>
+<div class="pr"><span class="psk">Loại</span><span class="psv">Electrolytic (có cực tính)</span></div>
+<div class="pr"><span class="psk">Cực +</span><span class="psv">Chân dài hơn</span></div>
+<div class="pr"><span class="psk">Cực −</span><span class="psv">Vạch trắng/bạc trên thân</span></div>
+<div class="pr"><span class="psk">Chức năng</span><span class="psv">Lọc nguồn, tránh voltage dip</span></div>
+</div><div class="pnote">Mắc song song VIN–GND của mỗi ESP32. Mắc ngược → nổ tụ!</div></div></div>
+</div>
+</div>
+</div>
+
 <script>
-// ─────── TAB SWITCHING ───────
-function switchTab(id, el) {
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
-  el.classList.add('active');
-  if(id==='wire') drawWireDiagram();
-}
+// ════════════════ TOOLTIP ENGINE ════════════════
+const tip=document.getElementById('tip');
+const tipHead=document.getElementById('tip-head');
+const tipBody=document.getElementById('tip-body');
+let tipTimeout;
 
-// ─────── STATE ───────
-let pressed=false, frame=0, pkts=0;
-let timers=[];
-let st={gpio2:false,espnow:false,gpio3:false,bc:false,relay:false,moto:false};
-let particles=[];
-
-// ─────── CANVAS ───────
-const cv=document.getElementById('mainCanvas');
-const ctx=cv.getContext('2d');
-function resizeCv(){cv.width=Math.max(cv.parentElement.clientWidth,700);}
-resizeCv();window.addEventListener('resize',()=>{resizeCv();});
-
-// design coords (will scale x)
-const DW=1060, DH=460;
-function sx(x){return x*(cv.width/DW);}
-function sy(y){return y*(DH/DH);}
-function s(v){return v*(cv.width/DW);}
-
-// Layout coords in design space
-const NK={x1:10,x2:120,y1:10,y2:450,cx:65};
-const E1={x1:178,x2:300,y1:30,y2:380,cx:239};
-const WZ={cx:380};
-const E2={x1:460,x2:582,y1:30,y2:380,cx:521};
-const RELAY={x1:640,x2:760,y1:30,y2:220};
-const BC={cx:820,cy:280,r:22};
-const BUCK={x1:640,x2:760,y1:350,y2:430};
-const BAT={cx:860,cy:390,r:30};
-const STR={x1:780,x2:870,y1:30,y2:220};
-const GNDR={y:448};
-
-// Key Y positions
-const Y={
-  bplus:170, gnd:220, bsi:195,
-  btnA:330, btnB:360,
-  e1vin:80, e1gnd:120, e1_3v3:200, e1io2:290,
-  e2vin:80, e2gnd:120, e2io3:290,
-  relCP:70, relCN:180, relNO:70, relCOM:180,
-  bcBase:280, bcColl:210, bcEmit:350,
-  buckIn:390, buckOut:390,
-  batPos:390, batNeg:410,
-  r5v:20  // 5V rail
+const TIPS={
+  // Nokia side
+  'w-bplus-vin':{icon:'🔴',title:'Dây ĐỎ — B+ → VIN',body:`<b>Từ:</b> Pad B+ trên Battery Connector<br><b>Đến:</b> Chân VIN của ESP32-C3 #1<br><span class="tv">Điện áp: 3.7V – 4.2V (Li-Ion)</span><br><b>Chức năng:</b> Cấp nguồn từ pin Nokia cho ESP32-C3. Chân VIN có LDO nội hạ xuống 3.3V.`},
+  'w-gnd':{icon:'⚫',title:'Dây ĐEN — GND',body:`<b>Từ:</b> Pad GND Nokia + Điểm B nút nguồn<br><b>Đến:</b> Chân GND ESP32-C3<br><span class="tv">Điện áp: 0V (Mass)</span><br><b>Chức năng:</b> Điểm tham chiếu chung của toàn mạch Nokia.`},
+  'w-3v3':{icon:'🔵',title:'Dây XANH DỌC — 3V3 → 10kΩ',body:`<b>Từ:</b> Chân 3V3 (output) ESP32-C3<br><b>Đến:</b> Một đầu điện trở 10kΩ<br><span class="tv">Điện áp: 3.3V (output của LDO nội)</span><br><b>Chức năng:</b> Cấp điện áp tham chiếu cho mạch pull-up, giữ GPIO2 ở mức HIGH khi nút chưa nhấn.`},
+  'w-gpio2':{icon:'🔵',title:'Dây XANH — Điểm A → GPIO2',body:`<b>Từ:</b> Điểm tiếp xúc A của nút nguồn Nokia<br><b>Đến:</b> Chân GPIO2 + đầu kia 10kΩ (junction)<br><span class="tv">Logic: HIGH (3.3V) khi hở | LOW (0V) khi nhấn</span><br><b>Chức năng:</b> Tín hiệu nhận biết nút nhấn. Khi A nối B (GND), GPIO2 xuống LOW → ESP32 phát hiện.`},
+  'w-btnB':{icon:'⚫',title:'Dây ĐEN — Điểm B → GND',body:`<b>Từ:</b> Điểm tiếp xúc B của nút nguồn Nokia<br><b>Đến:</b> GND chung<br><span class="tv">Điện áp: 0V</span><br><b>Chức năng:</b> Khi nút nhấn, A nối B → GPIO2 bị kéo xuống GND = mức LOW.`},
+  'pad-bplus':{icon:'🔴',title:'Pad B+ — Battery +',body:`<b>Vị trí:</b> Điểm hàn trái cùng Battery Connector<br><span class="tv">Điện áp: 3.7V (nominal) · 4.2V (full)</span><br><b>Chức năng:</b> Cực dương của pin Nokia Li-Ion. Hàn dây đỏ vào điểm này để lấy điện nuôi ESP32-C3.<br><b>Lưu ý:</b> Dùng mỏ hàn nhỏ, nhiệt độ 320°C, hàn nhanh tay.`},
+  'pad-gnd':{icon:'⚫',title:'Pad GND — Battery −',body:`<b>Vị trí:</b> Điểm hàn phải cùng Battery Connector<br><span class="tv">Điện áp: 0V (Mass)</span><br><b>Chức năng:</b> Cực âm của pin Nokia. Hàn dây đen vào đây làm GND chung.`},
+  'pad-bsi':{icon:'⚠',title:'Pad BSI — Battery Status',body:`<b>Vị trí:</b> Pad giữa Battery Connector<br><b>Chức năng:</b> Nokia dùng để nhận dạng loại pin.<br><span class="tr">KHÔNG SỬ DỤNG trong dự án này</span>`},
+  'contact-A':{icon:'🔵',title:'Điểm A — Nút Nguồn',body:`<b>Vị trí:</b> Một trong 2 điểm tiếp xúc của nút nguồn<br><span class="tv">Logic: 3.3V (HIGH) khi hở · 0V (LOW) khi nhấn</span><br><b>Chức năng:</b> Hàn dây xanh vào đây. Khi nút nhấn, điểm A nối với điểm B (GND) → GPIO2 xuống LOW.`},
+  'contact-B':{icon:'⚫',title:'Điểm B — Nút Nguồn',body:`<b>Vị trí:</b> Điểm tiếp xúc còn lại của nút nguồn<br><span class="tv">Điện áp: 0V (nối GND bên trong Nokia)</span><br><b>Chức năng:</b> Hàn dây đen vào đây nối GND chung.`},
+  'comp-10k':{icon:'🟡',title:'Điện trở 10kΩ — Pull-up',body:`<b>Giá trị:</b> 10,000 Ω · ±5% · 1/4W<br><b>Mã màu:</b> Nâu · Đen · Cam · Vàng<br><span class="tv">Dòng: 3.3V ÷ 10kΩ = 0.33mA</span><br><b>Chức năng:</b> Giữ GPIO2 ở mức HIGH (3.3V) khi nút chưa nhấn. Khi nút nhấn, dòng kéo từ 3V3 qua điện trở xuống GND, GPIO2 = LOW.`},
+  'pin-e1-vin':{icon:'🔴',title:'Chân VIN — ESP32-C3 #1',body:`<b>Điện áp vào:</b> 3.3V – 6V<br><span class="tv">Hiện tại: 3.7–4.2V từ pin Nokia</span><br><b>Chức năng:</b> Chân nguồn chính. Bên trong có LDO hạ xuống 3.3V cấp cho chip và các chân GPIO. An toàn với pin Li-Ion Nokia.`},
+  'pin-e1-gnd':{icon:'⚫',title:'Chân GND — ESP32-C3 #1',body:`<b>Điện áp:</b> 0V (Mass)<br><b>Chức năng:</b> Điểm tham chiếu. Phải nối chung với GND Nokia (pad GND và điểm B nút nguồn).`},
+  'pin-e1-3v3':{icon:'🔵',title:'Chân 3V3 — ESP32-C3 #1',body:`<b>Điện áp:</b> 3.3V (output từ LDO nội)<br><span class="tv">Dòng ra tối đa: ~200mA</span><br><b>Chức năng:</b> Cấp 3.3V cho điện trở pull-up 10kΩ. KHÔNG dùng làm nguồn vào (đây là output).`},
+  'pin-e1-io2':{icon:'🔵',title:'Chân GPIO2 — ESP32-C3 #1',body:`<b>Loại:</b> Digital Input (có pull-up ngoài)<br><span class="tv">HIGH: 3.3V (nút hở) · LOW: 0V (nút nhấn)</span><br><b>Chức năng:</b> Đọc trạng thái nút nguồn Nokia. HIGH→LOW kích hoạt gửi gói ESP-NOW. Nối với điểm A và đầu dưới 10kΩ.`},
+  // Moto side
+  'w-gpio3':{icon:'🟠',title:'Dây CAM — GPIO3 → 1kΩ',body:`<b>Từ:</b> Chân GPIO3 ESP32-C3 #2<br><b>Đến:</b> Điện trở 1kΩ → Base BC547<br><span class="tv">Điện áp: 0V (idle) | 3.3V (active)</span><br><b>Chức năng:</b> Tín hiệu điều khiển kích BC547. HIGH → transistor dẫn → relay đóng.`},
+  'w-relay-no':{icon:'🟢',title:'Dây XANH LÁ — Relay NO → Nút đề',body:`<b>Từ:</b> Tiếp điểm NO (Normally Open) của Relay<br><b>Đến:</b> Một chân nút đề xe<br><span class="tv">Trạng thái: Hở khi relay OFF · Đóng khi relay ON</span><br><b>Chức năng:</b> Khi relay đóng, NO nối với COM → mô phỏng nhấn nút đề. Đấu song song nút đề gốc.`},
+  'w-relay-com':{icon:'🟢',title:'Dây XANH LÁ — Relay COM',body:`<b>Từ:</b> Tiếp điểm COM (Common) của Relay<br><b>Đến:</b> Chân kia của nút đề xe<br><b>Chức năng:</b> Điểm chung của relay. Cùng với NO tạo thành công tắc song song nút đề gốc.`},
+  'w-5v':{icon:'🟠',title:'Đường 5V — Buck OUT+ → ESP32 VIN + Relay coil+',body:`<b>Từ:</b> Buck Converter OUT+ (5V)<br><b>Đến:</b> ESP32-C3 #2 VIN + Relay coil+<br><span class="tv">Điện áp: 5.00V (cố định)</span><br><b>Chức năng:</b> Nguồn 5V cấp cho ESP32 (qua LDO nội) và cuộn relay. Phải chỉnh biến trở Buck đúng 5V trước.`},
+  'w-12v':{icon:'🔴',title:'Dây ĐỎ — Bình 12V → Buck IN+',body:`<b>Từ:</b> Bình xe máy cực + (12V)<br><b>Đến:</b> Buck Converter IN+<br><span class="tv">Điện áp: 12V–13.8V (xe đang chạy)</span><br><b>Chức năng:</b> Nguồn 12V của xe → Buck hạ xuống 5V ổn định cấp cho toàn mạch.`},
+  'comp-1k':{icon:'🟠',title:'Điện trở 1kΩ — Base Resistor',body:`<b>Giá trị:</b> 1,000 Ω · ±5% · 1/4W<br><b>Mã màu:</b> Nâu · Đen · Đỏ · Vàng<br><span class="tv">Dòng Base: (3.3−0.7) ÷ 1000 = 2.6mA</span><br><b>Chức năng:</b> Giới hạn dòng vào chân Base BC547, bảo vệ GPIO3 của ESP32 không bị quá tải.`},
+  'comp-bc547':{icon:'⚡',title:'BC547 NPN — Transistor khuếch đại',body:`<b>Loại:</b> NPN BJT · Package TO-92<br><b>Chân:</b> B (Base) · C (Collector) · E (Emitter)<br><span class="tv">Ic max: 100mA · hFE: ~200</span><br><b>Chức năng:</b> Khuếch đại tín hiệu GPIO3 (3.3V/2.6mA) → điều khiển cuộn relay (5V/80mA). Hoạt động ở vùng bão hòa (saturation).`},
+  'comp-diode':{icon:'🟣',title:'1N4007 — Flyback Diode',body:`<b>Loại:</b> Rectifier Diode · Vrrm: 1000V · If: 1A<br><b>Chân:</b> Cathode (vạch trắng) · Anode<br><span class="tv">Mắc: K→coil+(5V) · A→coil−(Collector)</span><br><b>Chức năng:</b> Khi relay tắt, cuộn sinh xung điện áp ngược rất cao. Diode dẫn ngược triệt xung này, bảo vệ BC547 và ESP32 khỏi bị hỏng.`},
+  'comp-relay':{icon:'⚡',title:'Relay SRD-05VDC — Công tắc điện từ',body:`<b>Coil:</b> 5VDC · ~70–90mA<br><b>Tiếp điểm:</b> 10A / 250VAC<br><b>Chân:</b> coil+ · coil− · COM · NO · NC<br><span class="tv">Dùng: COM và NO (song song nút đề)</span><br><b>Chức năng:</b> Khi BC547 dẫn, dòng qua cuộn → từ trường kéo cần → NO nối COM → mô phỏng nhấn nút đề xe.`},
+  'comp-buck':{icon:'⚡',title:'LM2596 Buck Converter',body:`<b>Vin:</b> 4.5V – 40V (từ bình 12V xe)<br><b>Vout:</b> Chỉnh biến trở → <span class="tg">5.00V cố định</span><br><b>Iout max:</b> 3A · Hiệu suất: ~92%<br><span class="tr">⚠ PHẢI đo và chỉnh đúng 5V trước khi cắm ESP32!</span>`},
+  'comp-bat':{icon:'🔋',title:'Bình xe máy 12V',body:`<b>Điện áp:</b> 12V (tắt máy) · 13.8V (đang sạc)<br><b>Chức năng:</b> Nguồn điện chính cho toàn mạch xe máy. Nối + vào Buck IN+, nối − vào GND chung.<br><b>Lưu ý:</b> Mắc cầu chì 2A trên dây + để bảo vệ mạch.`},
+  'pin-e2-vin':{icon:'🟠',title:'Chân VIN — ESP32-C3 #2',body:`<b>Điện áp vào:</b> 5V (từ Buck Converter)<br><b>Chức năng:</b> Nguồn chính. LDO nội hạ xuống 3.3V cho chip. VIN max 6V nên 5V từ Buck là an toàn.`},
+  'pin-e2-io3':{icon:'🟠',title:'Chân GPIO3 — ESP32-C3 #2',body:`<b>Loại:</b> Digital Output<br><span class="tv">LOW: 0V (idle) · HIGH: 3.3V (khi nhận START)</span><br><b>Chức năng:</b> Output điều khiển BC547 thông qua 1kΩ. Khi nhận gói ESP-NOW START, xuất HIGH → BC547 dẫn → relay đóng.`},
+  'comp-cap':{icon:'🔵',title:'Tụ 100µF — Lọc nguồn',body:`<b>Dung lượng:</b> 100µF · Loại Electrolytic<br><b>Điện áp:</b> ≥16V (Nokia) · ≥25V (xe máy)<br><b>Chức năng:</b> Lọc điện áp dao động, tránh voltage drop khi ESP32 phát WiFi (spike dòng ~200mA). Mắc song song VIN–GND.<br><span class="tr">⚠ Chú ý cực + (chân dài) và − (vạch trắng)!</span>`},
 };
 
-const COLORS={
-  red:'#ff2255', gnd:'#3a4a5a', cyan:'#00aaff', blue:'#4488ff',
-  green:'#00ff88', orange:'#ff7a00', yellow:'#ffc400', purple:'#a855f7',
-  dim:'#162040', active:'#00ff88', text:'#2a4a6a'
-};
+function showTip(key, e){
+  const t=TIPS[key];if(!t)return;
+  tipHead.innerHTML=`<span>${t.icon}</span>${t.title}`;
+  tipBody.innerHTML=t.body;
+  tip.classList.add('show');
+  moveTip(e);
+}
+function moveTip(e){
+  const x=e.clientX||e.touches?.[0]?.clientX||0;
+  const y=e.clientY||e.touches?.[0]?.clientY||0;
+  const tw=300,th=140;
+  let lx=x+16,ly=y+16;
+  if(lx+tw>window.innerWidth) lx=x-tw-16;
+  if(ly+th>window.innerHeight) ly=y-th-16;
+  tip.style.left=lx+'px';tip.style.top=ly+'px';
+}
+function hideTip(){tip.classList.remove('show');}
 
-function px(x){return sx(x);}
-function py(y){return sy(y);}
-
-function wire(pts,col,lw,dash,glow){
-  if(!pts||pts.length<2)return;
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(px(pts[0][0]),py(pts[0][1]));
-  for(let i=1;i<pts.length;i++) ctx.lineTo(px(pts[i][0]),py(pts[i][1]));
-  ctx.setLineDash(dash||[]);
-  ctx.strokeStyle=col;
-  ctx.lineWidth=(lw||2)*s(1)*0.6;
-  if(glow){ctx.shadowColor=col;ctx.shadowBlur=s(8);}
-  ctx.stroke();
-  ctx.shadowBlur=0;
-  ctx.setLineDash([]);
-  ctx.restore();
+function addTip(el,key){
+  if(!el)return;
+  el.style.cursor='pointer';
+  el.addEventListener('mouseenter',e=>showTip(key,e));
+  el.addEventListener('mousemove',moveTip);
+  el.addEventListener('mouseleave',hideTip);
+  el.addEventListener('touchstart',e=>{showTip(key,e.touches[0]);},{ passive:true });
+  el.addEventListener('touchend',hideTip);
 }
 
-function dot2(x,y,r,col,glow){
-  ctx.save();
-  ctx.beginPath();ctx.arc(px(x),py(y),s(r),0,Math.PI*2);
-  ctx.fillStyle=col;
-  if(glow){ctx.shadowColor=col;ctx.shadowBlur=s(8);}
-  ctx.fill();
-  ctx.shadowBlur=0;
-  ctx.restore();
+// ════════════════ TABS ════════════════
+function goTab(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('page-'+id).classList.add('on');
+  el.classList.add('on');
 }
 
-function rect2(x,y,w,h,rx2,fill,stroke,lw){
-  ctx.save();
-  ctx.beginPath();
-  const X=px(x),Y2=py(y),W=s(w),H2=s(h),R=s(rx2||0);
-  ctx.moveTo(X+R,Y2);ctx.lineTo(X+W-R,Y2);ctx.quadraticCurveTo(X+W,Y2,X+W,Y2+R);
-  ctx.lineTo(X+W,Y2+H2-R);ctx.quadraticCurveTo(X+W,Y2+H2,X+W-R,Y2+H2);
-  ctx.lineTo(X+R,Y2+H2);ctx.quadraticCurveTo(X,Y2+H2,X,Y2+H2-R);
-  ctx.lineTo(X,Y2+R);ctx.quadraticCurveTo(X,Y2,X+R,Y2);ctx.closePath();
-  if(fill){ctx.fillStyle=fill;ctx.fill();}
-  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=s(lw||1.5);ctx.stroke();}
-  ctx.restore();
+// ════════════════ SVG HELPERS ════════════════
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){
+  const e=document.createElementNS(NS,tag);
+  for(const[k,v]of Object.entries(attrs)) e.setAttribute(k,v);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+function g(attrs,parent){ return el('g',attrs,parent);}
+function rect(x,y,w,h,attrs,parent){
+  return el('rect',{x,y,width:w,height:h,...attrs},parent);
+}
+function circle(cx,cy,r,attrs,parent){
+  return el('circle',{cx,cy,r,...attrs},parent);
+}
+function line(x1,y1,x2,y2,attrs,parent){
+  return el('line',{x1,y1,x2,y2,...attrs},parent);
+}
+function path(d,attrs,parent){ return el('path',{d,...attrs},parent);}
+function text(content,x,y,attrs,parent){
+  const t=el('text',{x,y,...attrs},parent);
+  t.textContent=content;return t;
+}
+function tspan(content,attrs,parent){
+  const t=el('tspan',attrs,parent);t.textContent=content;return t;
 }
 
-function txt2(t,x,y,col,size,align){
-  ctx.save();
-  ctx.fillStyle=col;
-  ctx.font=`${s(size||8)}px IBM Plex Mono`;
-  ctx.textAlign=align||'center';
-  ctx.fillText(t,px(x),py(y));
-  ctx.restore();
+// Glow filter
+function addDefs(svg){
+  const defs=el('defs',{},svg);
+  // Glow filter
+  const f=el('filter',{id:'glow',x:'-30%',y:'-30%',width:'160%',height:'160%'},defs);
+  const blur=el('feGaussianBlur',{stdDeviation:'3',result:'blur'},f);
+  el('feComposite',{in:'SourceGraphic',in2:'blur',operator:'over'},f);
+  // Strong glow
+  const f2=el('filter',{id:'glow2',x:'-50%',y:'-50%',width:'200%',height:'200%'},defs);
+  el('feGaussianBlur',{stdDeviation:'5',result:'blur'},f2);
+  el('feComposite',{in:'SourceGraphic',in2:'blur',operator:'over'},f2);
+  // Grid pattern
+  const pat=el('pattern',{id:'grid',width:'28',height:'28',patternUnits:'userSpaceOnUse'},defs);
+  path('M 28 0 L 0 0 0 28',{fill:'none',stroke:'#0c1428',['stroke-width']:'.5'},pat);
+  // Arrow marker
+  const mk=el('marker',{id:'arr',markerWidth:'8',markerHeight:'8',refX:'7',refY:'4',orient:'auto'},defs);
+  path('M1,1 L7,4 L1,7 Z',{fill:'#2a4060'},mk);
+  const mk2=el('marker',{id:'arr-green',markerWidth:'8',markerHeight:'8',refX:'7',refY:'4',orient:'auto'},defs);
+  path('M1,1 L7,4 L1,7 Z',{fill:'#00cc66'},mk2);
 }
 
-// ─────── DRAW LOOP ───────
-function draw(){
-  ctx.clearRect(0,0,cv.width,DH);
-  ctx.fillStyle='#06080e';ctx.fillRect(0,0,cv.width,DH);
+// Background
+function addBg(svg,w,h){
+  rect(0,0,w,h,{fill:'#04060c'},svg);
+  rect(0,0,w,h,{fill:'url(#grid)'},svg);
+}
 
-  // Grid
-  ctx.strokeStyle='rgba(15,28,52,.5)';ctx.lineWidth=.5;
-  for(let x=0;x<cv.width;x+=s(24)){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,DH);ctx.stroke();}
-  for(let y=0;y<DH;y+=s(24)){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cv.width,y);ctx.stroke();}
+// Wire with hover hit area
+function wire(parent,pts,color,lw,dash,tipKey){
+  const d='M'+pts.map(p=>p.join(',')).join(' L');
+  const wg=g({class:'wire-group'},parent);
+  path(d,{fill:'none',stroke:color,['stroke-width']:lw||3,
+    ['stroke-linejoin']:'round',['stroke-linecap']:'round',
+    ...(dash?{['stroke-dasharray']:dash}:{})},wg);
+  // Hit area
+  const hit=path(d,{fill:'none',stroke:'transparent',['stroke-width']:'16',
+    ['stroke-linejoin']:'round',class:'wire-hit'},wg);
+  if(tipKey){
+    wg.style.cursor='pointer';
+    wg.addEventListener('mouseenter',e=>{
+      wg.querySelector('path').setAttribute('stroke-width',(lw||3)+2);
+      wg.querySelector('path').setAttribute('filter','url(#glow)');
+      showTip(tipKey,e);
+    });
+    wg.addEventListener('mousemove',moveTip);
+    wg.addEventListener('mouseleave',()=>{
+      wg.querySelector('path').setAttribute('stroke-width',lw||3);
+      wg.querySelector('path').removeAttribute('filter');
+      hideTip();
+    });
+  }
+  return wg;
+}
+
+// Component group with hover
+function compG(parent,tipKey,extraClass){
+  const grp=g({class:'hoverable '+(extraClass||'')},parent);
+  if(tipKey){
+    grp.addEventListener('mouseenter',e=>{
+      grp.querySelectorAll('rect,circle,path:not(.wire-hit)').forEach(el=>{
+        el.setAttribute('filter','url(#glow)');
+      });
+      showTip(tipKey,e);
+    });
+    grp.addEventListener('mousemove',moveTip);
+    grp.addEventListener('mouseleave',()=>{
+      grp.querySelectorAll('rect,circle,path').forEach(el=>el.removeAttribute('filter'));
+      hideTip();
+    });
+  }
+  return grp;
+}
+
+// Pin dot + label
+function pinEl(parent,x,y,lbl,valLbl,col,side,tipKey){
+  const pg=g({class:'hoverable'},parent);
+  circle(x,y,7,{fill:col+'22',stroke:col,['stroke-width']:'2'},pg);
+  circle(x,y,4,{fill:col},pg);
+  // Name box
+  const bx=side==='r'?x+12:x-12;
+  const anc=side==='r'?'start':'end';
+  text(lbl,bx,y+5,{fill:col,'font-size':'11','font-weight':'600','text-anchor':anc,'font-family':'IBM Plex Mono'},pg);
+  if(valLbl){
+    const vbx=side==='r'?x+12:x-12;
+    text(valLbl,vbx,y+18,{fill:col+'88','font-size':'9','text-anchor':anc,'font-family':'IBM Plex Mono'},pg);
+  }
+  if(tipKey) addTip(pg,tipKey);
+  return pg;
+}
+
+// Solder pad
+function solderPad(parent,x,y,label,sublbl,col,tipKey){
+  const pg=compG(parent,tipKey);
+  rect(x-22,y-14,44,28,{fill:col+'18',stroke:col,['stroke-width']:'2',rx:'3'},pg);
+  text(label,x,y+3,{fill:col,'font-size':'12','font-weight':'700','text-anchor':'middle','font-family':'IBM Plex Mono'},pg);
+  text(sublbl,x,y+16,{fill:col+'88','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono'},pg);
+  // Solder point
+  circle(x,y+24,6,{fill:col,stroke:col+'aa',['stroke-width']:'2',filter:'url(#glow)'},pg);
+  return pg;
+}
+
+// Section box
+function sectionBox(parent,x,y,w,h,label,col){
+  rect(x,y,w,h,{fill:col+'08',stroke:col,['stroke-width']:'1.5',rx:'6'},parent);
+  text(label,x+10,y+16,{fill:col,'font-size':'10','font-weight':'600','font-family':'IBM Plex Mono'},parent);
+}
+
+// Component box (generic)
+function compBox(parent,x,y,w,h,lines,borderCol,fillCol,tipKey){
+  const cg=compG(parent,tipKey);
+  rect(x,y,w,h,{fill:fillCol||'#080a12',stroke:borderCol,'stroke-width':'2',rx:'5'},cg);
+  lines.forEach((ln,i)=>{
+    text(ln.t,x+w/2,y+20+i*16,{fill:ln.c||borderCol,'font-size':ln.sz||10,'font-weight':ln.w||'600',
+      'text-anchor':'middle','font-family':'IBM Plex Mono'},cg);
+  });
+  return cg;
+}
+
+// ════════════════ NOKIA SVG ════════════════
+function buildNokia(){
+  const svg=document.getElementById('svgNokia');
+  addDefs(svg);addBg(svg,940,480);
+
+  // Zone labels
+  rect(8,4,195,18,{fill:'#00aaff0a',stroke:'#00aaff33',rx:'3'},svg);
+  text('NOKIA TA-1174 PCB',105,15.5,{fill:'#0088bb','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono','letter-spacing':'1'},svg);
+  rect(210,4,310,18,{fill:'#00aaff0a',stroke:'#00aaff22',rx:'3'},svg);
+  text('PULL-UP CIRCUIT + ESP32-C3 #1',365,15.5,{fill:'#2a4060','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono','letter-spacing':'1'},svg);
 
   // GND rail
-  wire([[NK.x1,GNDR.y],[900,GNDR.y]], COLORS.gnd, 2.5);
-  txt2('GND RAIL', 450, GNDR.y+10, '#162040', 7);
+  const gndG=g({},svg);
+  rect(8,450,924,20,{fill:'#3a506018',stroke:'#2a4060','stroke-width':'1',rx:'3'},gndG);
+  line(8,460,932,460,{stroke:'#2a5070','stroke-width':'3'},gndG);
+  text('GND RAIL',470,455,{fill:'#1a3050','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono','letter-spacing':'2'},gndG);
 
-  // 5V rail
-  wire([[E2.x1,Y.r5v],[RELAY.x2+10,Y.r5v]], '#553300', 1.5,[5,4]);
-  txt2('5V RAIL', 700, Y.r5v-8, '#332200', 7);
-
-  // ── NOKIA BODY ──
-  rect2(NK.x1,NK.y1,NK.x2-NK.x1,NK.y2-NK.y1,10,'#0a0d18','#1e3050',1.5);
-  txt2('NOKIA',NK.cx,NK.y1+15,'#1e3050',8);
-  txt2('TA-1174',NK.cx,NK.y1+26,'#1a2a40',7);
+  // ── NOKIA PCB ──
+  const nok=g({},svg);
+  rect(16,30,192,400,{fill:'#070a14',stroke:'#1e3050','stroke-width':'2',rx:'10'},nok);
+  text('NOKIA TA-1174',112,50,{fill:'#1e3050','font-size':'9','text-anchor':'middle','font-family':'IBM Plex Mono','font-weight':'600'},nok);
 
   // Screen
-  rect2(NK.x1+5,NK.y1+8,NK.x2-NK.x1-10,60,3,'#060e06','#1a3a1a',1);
-  txt2('NOKIA',NK.cx,NK.y1+30,'#0a3a0a',7);
-  const nsTxt=st.moto?'⚡ ĐỀ XE!':st.espnow?'📡 GỬI...':'Chờ lệnh';
-  txt2(nsTxt,NK.cx,NK.y1+46,st.moto?COLORS.green:st.espnow?COLORS.cyan:'#0a3a0a',7);
+  rect(26,58,172,64,{fill:'#030a03',stroke:'#163016','stroke-width':'1.5',rx:'4'},nok);
+  text('NOKIA',112,82,{fill:'#0a3a0a','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono'},nok);
+  text('TA-1174 · 3.7V Li-Ion',112,96,{fill:'#062a06','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},nok);
+  text('▌▌▌ ◉',112,108,{fill:'#041604','font-size':'7','text-anchor':'middle','font-family':'IBM Plex Mono'},nok);
 
-  // Battery connector
-  rect2(NK.x1+5,NK.y1+75,NK.x2-NK.x1-10,65,4,'rgba(255,122,0,.04)','rgba(255,122,0,.3)',1);
-  txt2('🟠 BATTERY CONN',NK.cx,NK.y1+88,'#553300',6.5);
-  // B+ pad
-  rect2(NK.x1+8,Y.bplus-14,32,28,2,'rgba(255,34,85,.1)','#ff2255',1.2);
-  txt2('B+',NK.x1+24,Y.bplus-2,'#ff4466',7);
-  txt2('3.7V',NK.x1+24,Y.bplus+10,'#aa2233',6);
-  dot2(NK.x1+24,Y.bplus+16,5,COLORS.red,true);
-  // BSI
-  rect2(NK.x1+44,Y.bsi-14,22,28,2,'rgba(30,30,30,.2)','#222',1);
-  txt2('BSI',NK.x1+55,Y.bsi,'#222',6);
-  // GND pad
-  rect2(NK.x1+70,Y.gnd-14,36,28,2,'rgba(60,70,90,.15)','#445',1.2);
-  txt2('GND',NK.x1+88,Y.gnd-2,'#4a6070',7);
-  txt2('0V',NK.x1+88,Y.gnd+10,'#3a5060',6);
-  dot2(NK.x1+88,Y.gnd+16,5,'#3a4a5a',false);
+  // Battery connector section
+  sectionBox(nok,20,135,188,100,'● BATTERY CONNECTOR  (chỗ khoanh CAM)','#ff7a00');
 
-  // Power button area
-  rect2(NK.x1+5,NK.y1+145,NK.x2-NK.x1-10,130,4,'rgba(0,170,255,.03)','rgba(0,170,255,.3)',1);
-  txt2('🔴 NÚT NGUỒN',NK.cx,NK.y1+158,'#003366',6.5);
+  // Pads
+  solderPad(nok,65,175,'B+','3.7V','#ff2255','pad-bplus');
+  solderPad(nok,112,175,'BSI','không dùng','#334455','pad-bsi');
+  solderPad(nok,159,175,'GND','0 V','#3a5060','pad-gnd');
+
+  // Power button section
+  sectionBox(nok,20,258,188,140,'● NÚT NGUỒN  (chỗ khoanh ĐỎ)','#00aaff');
 
   // Button circle
-  const bc2=pressed;
-  ctx.save();
-  ctx.beginPath();ctx.arc(px(NK.cx),py(310),s(22),0,Math.PI*2);
-  ctx.fillStyle=bc2?'#0d1428':'#161c2a';ctx.fill();
-  ctx.strokeStyle=bc2?COLORS.cyan:'#2a3d5a';
-  ctx.lineWidth=s(2);
-  if(bc2){ctx.shadowColor=COLORS.cyan;ctx.shadowBlur=s(14);}
-  ctx.stroke();ctx.shadowBlur=0;ctx.restore();
-  txt2('⏻',NK.cx,316,bc2?COLORS.cyan:'#2a3d5a',14);
+  const btnG=g({},nok);
+  circle(112,318,32,{fill:'#0d1428',stroke:'#2a3d5a','stroke-width':'2.5'},btnG);
+  circle(112,318,20,{fill:'#080c18',stroke:'#1e2d44','stroke-width':'1.5'},btnG);
+  circle(112,318,12,{fill:'#060a14',stroke:'#162030','stroke-width':'1'},btnG);
+  text('⏻',112,327,{fill:'#2a4060','font-size':'20','text-anchor':'middle','font-family':'IBM Plex Mono'},btnG);
 
-  // Contact A
-  const caC=st.gpio2?COLORS.cyan:'#0a2030';
-  dot2(NK.x1+28,Y.btnA,7,caC,st.gpio2);
-  txt2('A',NK.x1+28,Y.btnA+3.5,caC,7);
-  // Contact B
-  dot2(NK.x1+88,Y.btnB,7,'#1a2535',false);
-  txt2('B',NK.x1+88,Y.btnB+3.5,'#334455',7);
-  txt2(st.gpio2?'A→B ĐÓNG':'A hở',NK.cx,385,st.gpio2?COLORS.green:'#1e3a58',6.5);
+  // Contacts
+  const cAg=compG(nok,'contact-A');
+  circle(67,366,10,{fill:'#00aaff18',stroke:'#0088bb','stroke-width':'2.5'},cAg);
+  text('A',67,370,{fill:'#00aaff','font-size':'11','font-weight':'700','text-anchor':'middle','font-family':'IBM Plex Mono'},cAg);
+  text('Điểm A',67,383,{fill:'#004488','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},cAg);
 
-  // ── WIRES NOKIA → ESP32 #1 ──
-  const g2c=st.gpio2?COLORS.cyan:COLORS.dim;
-  const g2glow=st.gpio2;
+  const cBg=compG(nok,'contact-B');
+  circle(157,366,10,{fill:'#2a384818',stroke:'#3a4858','stroke-width':'2'},cBg);
+  text('B',157,370,{fill:'#4a5868','font-size':'11','font-weight':'700','text-anchor':'middle','font-family':'IBM Plex Mono'},cBg);
+  text('→ GND',157,383,{fill:'#2a3848','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},cBg);
 
-  // B+ → E1 VIN (red)
-  wire([[NK.x1+24,Y.bplus+16],[NK.x1+24,430],[165,430],[165,Y.e1vin],[E1.x1,Y.e1vin]], COLORS.red,2,[],true);
-  txt2('3.7V',150,425,'#441122',6,'right');
+  // Dashes between A and B
+  path('M78,366 L146,366',{stroke:'#1e3050','stroke-width':'1.5','stroke-dasharray':'5,4',fill:'none'},nok);
+  text('Nhấn: A nối B',112,400,{fill:'#1e3050','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},nok);
 
-  // Nokia GND → GND rail
-  wire([[NK.x1+88,Y.gnd+16],[NK.x1+88,GNDR.y]], COLORS.gnd,1.5,[3,3]);
-
-  // Button B → GND rail
-  wire([[NK.x1+88,Y.btnB],[NK.x1+88,GNDR.y]], COLORS.gnd,1.5,[3,3]);
-
-  // 3V3 pull-up from E1 to resistor symbol area then to btn A
-  wire([[E1.x1,Y.e1_3v3],[155,Y.e1_3v3],[155,Y.btnA],[NK.x1+28,Y.btnA]], COLORS.blue,1.5,[4,3]);
-  // 10kΩ inline on that wire (visual only)
-  rect2(143,Y.e1_3v3-8,24,16,2,'#0a0a08','#556633',1.2);
-  txt2('10k',155,Y.e1_3v3+4,'#556633',6.5);
-
-  // GPIO2 from E1 to junction with button A wire
-  wire([[E1.x1,Y.e1io2],[155,Y.e1io2],[155,Y.btnA+5]], g2c,2,[],g2glow);
-  dot2(155,Y.btnA,5,st.gpio2?COLORS.cyan:COLORS.blue,st.gpio2);
-
-  // ── ESP32 #1 BODY ──
-  rect2(E1.x1,E1.y1,E1.x2-E1.x1,E1.y2-E1.y1,7,'#08100a','#1a4a1a',1.5);
-  txt2('ESP32-C3',E1.cx,E1.y1+18,COLORS.green,7);
-  txt2('#1 TX',E1.cx,E1.y1+30,'#1a5a1a',7);
-
-  // E1 pins (left side = input)
-  const e1pins=[
-    {y:Y.e1vin,c:COLORS.red,n:'VIN'},
-    {y:Y.e1gnd,c:COLORS.gnd,n:'GND'},
-    {y:Y.e1_3v3,c:COLORS.blue,n:'3V3'},
-    {y:Y.e1io2,c:st.gpio2?COLORS.green:COLORS.cyan,n:'IO2',glow:st.gpio2},
-  ];
-  e1pins.forEach(p=>{
-    dot2(E1.x1,p.y,5,p.c,p.glow);
-    txt2(p.n,E1.x1+7,p.y+3.5,p.c,7,'left');
+  // ── 10kΩ RESISTOR ──
+  const r10=compG(svg,'comp-10k');
+  // Vertical resistor body
+  rect(240,152,28,88,{fill:'#0a0a08',stroke:'#997744','stroke-width':'2',rx:'4'},r10);
+  // Bands
+  [{y:161,c:'#cc2222'},{y:176,c:'#dd8800'},{y:191,c:'#ddaa00'},{y:206,c:'#999999'}].forEach(b=>{
+    rect(243,b.y,22,11,{fill:b.c,rx:'1'},r10);
   });
-  txt2('📡',E1.cx,E1.y2-28,COLORS.green,16);
+  text('10kΩ',254,144,{fill:'#997744','font-size':'10','font-weight':'700','text-anchor':'middle','font-family':'IBM Plex Mono'},r10);
+  text('PULL-UP',254,246,{fill:'#665533','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono'},r10);
+  // Terminals
+  circle(254,152,5,{fill:'#4488ff',stroke:'#3b82f6','stroke-width':'1.5'},r10);
+  circle(254,240,8,{fill:'#0088bb',stroke:'#00aaff','stroke-width':'2',filter:'url(#glow)'},r10);
+  text('junction',254,256,{fill:'#0088bb','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},r10);
+  // Side label
+  text('Nâu·Đen',283,192,{fill:'#554422','font-size':'8','font-family':'IBM Plex Mono'},r10);
+  text('Cam·Vàng',283,204,{fill:'#554422','font-size':'8','font-family':'IBM Plex Mono'},r10);
 
-  // ── WIRELESS ZONE ──
-  for(let i=0;i<4;i++){
-    const ph=((frame*.028+i*.25)%1);
-    const r2=ph*45;
-    const al=(1-ph)*(st.espnow?.8:.25);
-    ctx.save();
-    ctx.beginPath();ctx.arc(px(WZ.cx),py(200),s(r2),0,Math.PI*2);
-    ctx.strokeStyle=`rgba(0,255,136,${al})`;
-    ctx.lineWidth=s(1.5);
-    if(st.espnow){ctx.shadowColor=COLORS.green;ctx.shadowBlur=s(6);}
-    ctx.stroke();ctx.shadowBlur=0;ctx.restore();
-  }
-  txt2('ESP-NOW',WZ.cx,200,st.espnow?COLORS.green:'#0f2030',8);
-  txt2('2.4GHz',WZ.cx,214,st.espnow?'#00cc66':'#0a1828',7);
-  txt2(st.espnow?'>>>':'···',WZ.cx,228,st.espnow?COLORS.green:'#0a1828',9);
+  // ── ESP32-C3 #1 ──
+  const e1=g({},svg);
+  rect(330,30,210,390,{fill:'#050d05',stroke:'#1a4a1a','stroke-width':'2.5',rx:'8'},e1);
+  rect(330,30,210,40,{fill:'#071207',stroke:'none',rx:'8'},e1);
+  rect(330,55,210,15,{fill:'#071207',stroke:'none'},e1);
+  text('ESP32-C3 #1',435,55,{fill:'#00cc66','font-size':'11','font-weight':'700','text-anchor':'middle','font-family':'IBM Plex Mono'},e1);
+  text('TRANSMITTER · NOKIA SIDE',435,70,{fill:'#1a5a1a','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono'},e1);
+  text('📡',435,360,{fill:'#1a5a1a','font-size':'28','text-anchor':'middle','font-family':'IBM Plex Mono'},e1);
+  text('ESP-NOW 2.4GHz',435,382,{fill:'#1a5a1a','font-size':'8.5','text-anchor':'middle','font-family':'IBM Plex Mono'},e1);
+  text('→ ESP32-C3 #2 (Xe máy)',435,395,{fill:'#0f3a0f','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},e1);
+  // Chip representation
+  rect(370,100,130,200,{fill:'#030803',stroke:'#0f3a0f','stroke-width':'1',rx:'4'},e1);
+  text('ESP32-C3',435,185,{fill:'#0f3a0f','font-size':'10','text-anchor':'middle','font-family':'IBM Plex Mono'},e1);
+  text('MINI-1U',435,200,{fill:'#0a280a','font-size':'9','text-anchor':'middle','font-family':'IBM Plex Mono'},e1);
+  // Pin rows LEFT side
+  pinEl(e1,330,110,'VIN','3.7–4.2V','#ff2255','r','pin-e1-vin');
+  pinEl(e1,330,150,'GND','0V','#3a5060','r','pin-e1-gnd');
+  pinEl(e1,330,200,'3V3','3.3V out','#4488ff','r','pin-e1-3v3');
+  pinEl(e1,330,250,'GPIO2','INPUT','#00aaff','r','pin-e1-io2');
+  // GPIO2 sub-note
+  text('← 10kΩ + Điểm A',355,264,{fill:'#004466','font-size':'7.5','text-anchor':'start','font-family':'IBM Plex Mono'},e1);
 
-  // E1 → wireless line
-  const ewc=st.espnow?COLORS.green:COLORS.dim;
-  wire([[E1.x2,200],[E2.x1,200]], ewc,1.5,[st.espnow?1:4,4],st.espnow);
+  // ── WIRES ──
+  // W1: B+ → VIN (RED)
+  wire(svg,[[65,199],[65,435],[312,435],[312,110],[330,110]],'#ff2255',3.5,null,'w-bplus-vin');
+  // W1 label
+  const w1g=g({},svg);
+  rect(100,427,130,16,{fill:'#050608',rx:'3'},w1g);
+  text('B+ → VIN  (ĐỎ)',165,438.5,{fill:'#cc2244','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono'},w1g);
 
-  // ── ESP32 #2 BODY ──
-  rect2(E2.x1,E2.y1,E2.x2-E2.x1,E2.y2-E2.y1,7,'#08100a','#1a4a1a',1.5);
-  txt2('ESP32-C3',E2.cx,E2.y1+18,COLORS.green,7);
-  txt2('#2 RX',E2.cx,E2.y1+30,'#1a5a1a',7);
+  // W2: GND Nokia → GND rail (DARK BLUE)
+  wire(svg,[[159,199],[159,460]],'#2a5070',2.5,'7,4','w-gnd');
+  text('GND (ĐEN)',182,390,{fill:'#1a3050','font-size':'7.5','font-family':'IBM Plex Mono'},svg);
 
-  const e2pins=[
-    {y:Y.e2vin,c:'#cc4400',n:'VIN',side:'l'},
-    {y:Y.e2gnd,c:COLORS.gnd,n:'GND',side:'l'},
-    {y:Y.e2io3,c:st.gpio3?COLORS.orange:COLORS.dim,n:'IO3',glow:st.gpio3,side:'r'},
+  // E1 GND → GND rail
+  wire(svg,[[330,150],[308,150],[308,460]],'#2a5070',2,'6,4','w-gnd');
+
+  // W3: 3V3 → 10kΩ top (BLUE dashed)
+  wire(svg,[[330,200],[254,200],[254,152]],'#4488ff',2.5,'7,4','w-3v3');
+  const w3g=g({},svg);
+  rect(266,187,60,14,{fill:'#05060c',rx:'3'},w3g);
+  text('3V3 (XANH DỌC)',296,197.5,{fill:'#3366cc','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},w3g);
+
+  // W4: 10kΩ bottom junction → GPIO2 (CYAN)
+  wire(svg,[[254,240],[330,250]],'#00aaff',3,null,'w-gpio2');
+  const w4g=g({},svg);
+  rect(260,231,70,14,{fill:'#05060c',rx:'3'},w4g);
+  text('→ GPIO2',295,241.5,{fill:'#0088bb','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},w4g);
+
+  // W5: Btn A → junction (CYAN)
+  wire(svg,[[67,376],[67,442],[228,442],[228,250],[254,250]],'#0088cc',2.5,null,'w-gpio2');
+
+  // W6: Btn B → GND rail
+  wire(svg,[[157,376],[157,460]],'#2a4060',2,'5,4','w-btnB');
+  rect(162,410,56,14,{fill:'#05060c',rx:'3'},svg);
+  text('B → GND',190,419.5,{fill:'#1a3050','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},svg);
+
+  // ── CAPACITOR ──
+  const capG=compG(svg,'comp-cap');
+  line(585,200,585,340,{stroke:'#2a3a5a','stroke-width':'.8','stroke-dasharray':'3,4'},capG);
+  line(585,340,610,340,{stroke:'#2a3a5a','stroke-width':'1.5'},capG);
+  rect(610,330,24,10,{fill:'#0a0a14',stroke:'#334466','stroke-width':'1.5',rx:'2'},capG);
+  rect(610,342,24,10,{fill:'#0a0a14',stroke:'#334466','stroke-width':'1.5',rx:'2'},capG);
+  line(622,352,622,460,{stroke:'#2a3a5a','stroke-width':'1.5','stroke-dasharray':'4,3'},capG);
+  text('+',602,337,{fill:'#4488aa','font-size':'10','font-weight':'700','font-family':'IBM Plex Mono'},capG);
+  text('−',602,351,{fill:'#4488aa','font-size':'10','font-weight':'700','font-family':'IBM Plex Mono'},capG);
+  text('100µF / 16V',650,341,{fill:'#224466','font-size':'8.5','font-family':'IBM Plex Mono'},capG);
+  text('// VIN–GND',650,354,{fill:'#162a3a','font-size':'8','font-family':'IBM Plex Mono'},capG);
+
+  // ── LEGEND BOX ──
+  rect(620,30,300,130,{fill:'#06080e',stroke:'#162038','stroke-width':'1',rx:'6'},svg);
+  text('MÀU DÂY',770,48,{fill:'#1e3050','font-size':'9','text-anchor':'middle','font-family':'IBM Plex Mono','letter-spacing':'2'},svg);
+  const legLines=[
+    {c:'#ff2255',d:'solid',l:'Đỏ — B+ (3.7V) → VIN'},
+    {c:'#2a5070',d:'7,4',l:'Đen — GND'},
+    {c:'#4488ff',d:'7,4',l:'Xanh dọc — 3V3 → 10kΩ (pull-up)'},
+    {c:'#00aaff',d:'solid',l:'Xanh lam — Điểm A → GPIO2'},
+    {c:'#2a4060',d:'5,4',l:'Đen tối — Điểm B → GND'},
   ];
-  e2pins.forEach(p=>{
-    const px2=p.side==='r'?E2.x2:E2.x1;
-    dot2(px2,p.y,5,p.c,p.glow);
-    txt2(p.n,p.side==='r'?E2.x2-7:E2.x1+7,p.y+3.5,p.c,7,p.side==='r'?'right':'left');
+  legLines.forEach((ll,i)=>{
+    const y=64+i*19;
+    if(ll.d==='solid') line(630,y,668,y,{stroke:ll.c,'stroke-width':'3'},svg);
+    else line(630,y,668,y,{stroke:ll.c,'stroke-width':'2.5','stroke-dasharray':ll.d},svg);
+    text(ll.l,674,y+4.5,{fill:ll.c+'bb','font-size':'8','font-family':'IBM Plex Mono'},svg);
   });
-  txt2('📡',E2.cx,E2.y2-28,COLORS.green,16);
-
-  // E2 VIN ← 5V rail
-  wire([[E2.x1,Y.e2vin],[E2.x1,Y.r5v]], '#442200',1.5,[3,3]);
-  // E2 GND rail
-  wire([[E2.x1,Y.e2gnd],[E2.x1,GNDR.y]], COLORS.gnd,1.5,[3,3]);
-
-  // ── GPIO3 → 1kΩ → BC547 Base ──
-  const g3c=st.gpio3?COLORS.orange:COLORS.dim;
-  wire([[E2.x2,Y.e2io3],[E2.x2+20,Y.e2io3],[E2.x2+20,Y.bcBase],[BC.cx-BC.r-18,Y.bcBase]], g3c,2,[],st.gpio3);
-  // 1kΩ inline
-  rect2(E2.x2+20,Y.bcBase-7,30,14,2,'#0a0808','#554422',1.2);
-  txt2('1kΩ',E2.x2+35,Y.bcBase+3,'#554422',6.5);
-  wire([[E2.x2+50,Y.bcBase],[BC.cx-BC.r,Y.bcBase]], g3c,2,[],st.gpio3);
-
-  // ── BC547 ──
-  const bcc=st.bc?COLORS.orange:'#443322';
-  ctx.save();
-  ctx.beginPath();ctx.arc(px(BC.cx),py(BC.cy),s(BC.r),0,Math.PI*2);
-  ctx.fillStyle=st.bc?'#1a0a04':'#080606';ctx.fill();
-  ctx.strokeStyle=bcc;ctx.lineWidth=s(1.5);
-  if(st.bc){ctx.shadowColor=bcc;ctx.shadowBlur=s(10);}
-  ctx.stroke();ctx.shadowBlur=0;ctx.restore();
-  txt2('BC547',BC.cx,BC.cy-3,bcc,7);
-  txt2('NPN',BC.cx,BC.cy+7,bcc,6.5);
-
-  // Base stub
-  wire([[BC.cx-BC.r-18,Y.bcBase],[BC.cx-BC.r,BC.cy]], g3c,2,[],st.gpio3);
-  txt2('B',BC.cx-BC.r-20,BC.cy,'#442200',7,'right');
-  // Collector up
-  const cc=st.bc?'#aa5500':COLORS.dim;
-  wire([[BC.cx,BC.cy-BC.r],[BC.cx,Y.bcColl],[RELAY.x1,Y.bcColl]], cc,2,[],st.bc);
-  txt2('C',BC.cx+BC.r+3,BC.cy-BC.r,'#442200',7,'left');
-  // Emitter down to GND
-  wire([[BC.cx,BC.cy+BC.r],[BC.cx,GNDR.y]], COLORS.gnd,2,[],false);
-  txt2('E',BC.cx+BC.r+3,BC.cy+BC.r,'#442200',7,'left');
-
-  // ── RELAY ──
-  const rlc=st.relay?'#cc5500':'#442200';
-  rect2(RELAY.x1,RELAY.y1,RELAY.x2-RELAY.x1,RELAY.y2-RELAY.y1,5,'#0a0600',rlc,1.5);
-  const rcx=(RELAY.x1+RELAY.x2)/2;
-  txt2('RELAY',rcx,RELAY.y1+16,rlc,8);
-  txt2('SRD-05VDC',rcx,RELAY.y1+28,'#332200',6.5);
-  txt2('CUỘN COIL',rcx,RELAY.y1+55,'#2a1800',6.5);
-  txt2('TIẾP ĐIỂM',rcx,RELAY.y1+110,st.relay?'#1a5a1a':'#0a2a0a',6.5);
-
-  // Relay coil+ from 5V rail
-  wire([[RELAY.x1,Y.relCP],[RELAY.x1,Y.r5v],[E2.x1,Y.r5v]], '#553300',1.5,[3,3]);
-  dot2(RELAY.x1,Y.relCP,5,st.relay?'#cc4400':COLORS.dim,st.relay);
-  txt2('+',RELAY.x1-6,Y.relCP+3.5,'#553300',7,'right');
-  // Relay coil- to BC collector
-  dot2(RELAY.x1,Y.relCN,5,st.bc?'#aa5500':COLORS.dim,st.bc);
-  txt2('−',RELAY.x1-6,Y.relCN+3.5,'#442200',7,'right');
-
-  // 1N4007 diode (K at top, A at bottom)
-  const dx=RELAY.x1-18;
-  wire([[dx,Y.relCP],[dx,Y.bcColl+15]], '#5522aa',1.5,[]);
-  // Triangle
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(px(dx),py(Y.relCP+12));
-  ctx.lineTo(px(dx-8),py(Y.relCP+28));
-  ctx.lineTo(px(dx+8),py(Y.relCP+28));
-  ctx.closePath();ctx.fillStyle='#1a0030';ctx.fill();
-  ctx.strokeStyle='#a855f7';ctx.lineWidth=s(1.2);ctx.stroke();
-  ctx.restore();
-  wire([[dx-9,Y.relCP+12],[dx+9,Y.relCP+12]],'#a855f7',2);
-  wire([[dx,Y.relCP+28],[dx,Y.bcColl+15]],'#a855f7',1.5);
-  txt2('1N4007',dx-12,Y.relCP+20,'#5522aa',6,'right');
-
-  // Relay NO & COM contacts
-  const rcc=st.relay?COLORS.green:'#1a3a1a';
-  dot2(RELAY.x2,Y.relNO,5,rcc,st.relay);
-  txt2('NO',RELAY.x2+5,Y.relNO+3.5,rcc,7,'left');
-  dot2(RELAY.x2,Y.relCOM,5,rcc,st.relay);
-  txt2('COM',RELAY.x2+5,Y.relCOM+3.5,rcc,7,'left');
-  // Armature
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(px(RELAY.x2),py(Y.relNO));
-  if(st.relay) ctx.lineTo(px(RELAY.x2),py(Y.relCOM));
-  else ctx.lineTo(px(RELAY.x2+12),py(Y.relNO-18));
-  ctx.strokeStyle=rcc;ctx.lineWidth=s(2);
-  if(st.relay){ctx.shadowColor=COLORS.green;ctx.shadowBlur=s(8);}
-  ctx.stroke();ctx.shadowBlur=0;ctx.restore();
-
-  // ── STARTER BOX ──
-  const stc=st.moto?COLORS.green:'#0a2a0a';
-  rect2(STR.x1,STR.y1,STR.x2-STR.x1,STR.y2-STR.y1,5,
-        st.moto?'rgba(0,255,136,.06)':'rgba(0,20,0,.1)',stc,1.5);
-  txt2('NÚT ĐỀ XE',(STR.x1+STR.x2)/2,STR.y1+16,stc,7);
-  txt2('(song song)',(STR.x1+STR.x2)/2,STR.y1+27,'#0a1a0a',6.5);
-  dot2(STR.x1,Y.relNO,5,stc,st.moto);
-  dot2(STR.x1,Y.relCOM,5,stc,st.moto);
-  ctx.save();
-  ctx.beginPath();ctx.moveTo(px(STR.x1),py(Y.relNO));
-  if(st.moto) ctx.lineTo(px(STR.x1),py(Y.relCOM));
-  else ctx.lineTo(px(STR.x1+12),py(Y.relNO-18));
-  ctx.strokeStyle=stc;ctx.lineWidth=s(2);
-  if(st.moto){ctx.shadowColor=COLORS.green;ctx.shadowBlur=s(8);}
-  ctx.stroke();ctx.shadowBlur=0;ctx.restore();
-  txt2(st.moto?'⚡ ĐỀ!':(STR.x1+STR.x2)/2,(STR.y1+STR.y2)/2+15,st.moto?COLORS.green:'#0a1a0a',st.moto?10:7,'center');
-  if(st.moto) txt2('⚡ ĐỀ!',(STR.x1+STR.x2)/2,(STR.y1+STR.y2)/2+15,COLORS.green,10);
-  else txt2('Chờ...',(STR.x1+STR.x2)/2,(STR.y1+STR.y2)/2+15,'#0a1a0a',7);
-
-  // Relay NO/COM → Starter
-  const strc=st.relay?COLORS.green:'#0a2a0a';
-  wire([[RELAY.x2,Y.relNO],[STR.x1,Y.relNO]], strc,2,[],st.relay);
-  wire([[RELAY.x2,Y.relCOM],[STR.x1,Y.relCOM]], strc,2,[],st.relay);
-
-  // ── BUCK ──
-  rect2(BUCK.x1,BUCK.y1,BUCK.x2-BUCK.x1,BUCK.y2-BUCK.y1,5,'#0a0600','#553322',1.5);
-  txt2('LM2596',(BUCK.x1+BUCK.x2)/2,BUCK.y1+17,'#663322',8);
-  txt2('12V→5V',(BUCK.x1+BUCK.x2)/2,BUCK.y1+29,'#442200',7);
-  dot2(BUCK.x1,Y.buckIn,5,COLORS.red,false);
-  txt2('IN+',BUCK.x1-5,Y.buckIn+3.5,'#553322',6.5,'right');
-  dot2(BUCK.x2,Y.buckOut,5,'#cc4400',false);
-  txt2('OUT+',BUCK.x2+5,Y.buckOut+3.5,'#664422',6.5,'left');
-
-  // ── BATTERY ──
-  rect2(BAT.cx-40,BAT.cy-25,80,55,5,'#0a0a04','#776600',1.5);
-  txt2('12V',BAT.cx,BAT.cy-8,'#776600',9);
-  txt2('BÌNH XE',BAT.cx,BAT.cy+5,'#443300',6.5);
-  dot2(BAT.cx-22,BAT.cy+20,5,COLORS.red,false);
-  txt2('+',BAT.cx-22-8,BAT.cy+22,'#ff4466',8,'right');
-  dot2(BAT.cx+22,BAT.cy+20,5,COLORS.gnd,false);
-  txt2('−',BAT.cx+22+8,BAT.cy+22,'#3a4a5a',8,'left');
-
-  // 12V+ → Buck IN+
-  wire([[BAT.cx-22,BAT.cy+20],[BUCK.x1,BAT.cy+20],[BUCK.x1,Y.buckIn]], COLORS.red,2,[]);
-  // Buck OUT+ → 5V rail
-  wire([[BUCK.x2,Y.buckOut],[BUCK.x2,Y.r5v],[E2.x1,Y.r5v]], '#553300',1.5,[5,4]);
-  // 12V- → GND rail
-  wire([[BAT.cx+22,BAT.cy+20],[BAT.cx+22,GNDR.y]], COLORS.gnd,1.5,[3,3]);
-  // Buck IN- → GND rail
-  wire([[BUCK.x1,BUCK.y2],[BUCK.x1,GNDR.y]], COLORS.gnd,1.2,[3,3]);
-
-  // BC collector → relay coil-
-  wire([[BC.cx,Y.bcColl],[RELAY.x1,Y.bcColl]], st.bc?'#aa5500':COLORS.dim,2,[],st.bc);
-  dot2(RELAY.x1,Y.bcColl,5,st.bc?'#aa5500':COLORS.dim,st.bc);
-  wire([[dx,Y.bcColl+15],[RELAY.x1,Y.bcColl]], st.bc?'#7733bb':'#3a1a66',1.5);
-
-  // Labels
-  txt2('NOKIA SIDE',NK.cx,GNDR.y+12,'#1a3050',7);
-  txt2('XE MÁY SIDE (12V→5V)',700,GNDR.y+12,'#1a2a40',7);
-
-  // Particles
-  updateDrawParticles();
-
-  frame++;
-  requestAnimationFrame(draw);
 }
 
-// ─────── PARTICLES ───────
-function spawnP(path,col,spd){
+// ════════════════ MOTO SVG ════════════════
+function buildMoto(){
+  const svg=document.getElementById('svgMoto');
+  addDefs(svg);addBg(svg,1060,480);
+
+  // Zone labels
+  rect(8,4,180,18,{fill:'#ff7a000a',stroke:'#ff7a0033',rx:'3'},svg);
+  text('ESP32-C3 #2 (RX)',97,15.5,{fill:'#cc5500','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono','letter-spacing':'1'},svg);
+  rect(198,4,850,18,{fill:'#ff7a000a',stroke:'#ff7a0022',rx:'3'},svg);
+  text('BC547 → 1N4007 → RELAY → NÚT ĐỀ XE → 12V BÌNH XE → BUCK LM2596',623,15.5,{fill:'#553300','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono','letter-spacing':'1'},svg);
+
+  // GND rail
+  line(8,460,1050,460,{stroke:'#2a5070','stroke-width':'3'},svg);
+  rect(8,450,1044,20,{fill:'#2a407018',stroke:'#1e3050','stroke-width':'1',rx:'3'},svg);
+  text('GND RAIL',530,455,{fill:'#1a3050','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono','letter-spacing':'2'},svg);
+
+  // 5V rail
+  line(8,32,750,32,{stroke:'#553300','stroke-width':'2.5','stroke-dasharray':'9,5'},svg);
+  rect(8,26,742,14,{fill:'#5533000a',rx:'3'},svg);
+  text('5V RAIL (Buck OUT+ → ESP32 VIN + Relay coil+)',375,36,{fill:'#332200','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},svg);
+
+  // ── ESP32-C3 #2 ──
+  const e2=g({},svg);
+  rect(10,46,180,360,{fill:'#050d05',stroke:'#1a4a1a','stroke-width':'2.5',rx:'8'},e2);
+  text('ESP32-C3 #2',100,68,{fill:'#66cc44','font-size':'10','font-weight':'700','text-anchor':'middle','font-family':'IBM Plex Mono'},e2);
+  text('RECEIVER · XE MÁY',100,82,{fill:'#1a5a1a','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},e2);
+  // Chip
+  rect(35,115,110,160,{fill:'#030803',stroke:'#0f3a0f','stroke-width':'1',rx:'4'},e2);
+  text('ESP32-C3',100,195,{fill:'#0f3a0f','font-size':'9','text-anchor':'middle','font-family':'IBM Plex Mono'},e2);
+  // Antenna
+  text('📡',100,336,{fill:'#1a5a1a','font-size':'26','text-anchor':'middle','font-family':'IBM Plex Mono'},e2);
+  text('ESP-NOW RX',100,356,{fill:'#1a5a1a','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono'},e2);
+  text('← ESP32-C3 #1',100,369,{fill:'#0f3a0f','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},e2);
+  // Pins LEFT
+  pinEl(e2,10,110,'VIN','5V','#cc4400','r','pin-e2-vin');
+  pinEl(e2,10,150,'GND','0V','#3a5060','r');
+  // GPIO3 RIGHT
+  pinEl(e2,190,230,'GPIO3','OUTPUT','#ff7a00','l','pin-e2-io3');
+
+  // Wires from E2
+  wire(svg,[[10,110],[10,32]],'#553300',2,'6,4','w-5v'); // VIN ← 5V rail
+  wire(svg,[[10,150],[10,460]],'#2a5070',2,'5,4','w-gnd'); // GND
+
+  // ── 1kΩ RESISTOR (horizontal) ──
+  const r1=compG(svg,'comp-1k');
+  rect(210,220,70,20,{fill:'#0a0808',stroke:'#886644','stroke-width':'2',rx:'4'},r1);
+  [{x:214,c:'#cc3333'},{x:228,c:'#111'},{x:242,c:'#cc2222'},{x:256,c:'#999'}].forEach(b=>{
+    rect(b.x,224,10,12,{fill:b.c,rx:'1'},r1);
+  });
+  text('1kΩ',245,214,{fill:'#886644','font-size':'9.5','font-weight':'700','text-anchor':'middle','font-family':'IBM Plex Mono'},r1);
+  text('Nâu·Đen·Đỏ·Vàng',245,252,{fill:'#554433','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},r1);
+  // Terminal dots
+  circle(210,230,5,{fill:'#ff7a00',stroke:'#ff9900','stroke-width':'1.5'},r1);
+  circle(280,230,5,{fill:'#ff7a00',stroke:'#ff9900','stroke-width':'1.5'},r1);
+
+  // GPIO3 → 1kΩ → BC547 Base
+  wire(svg,[[190,230],[210,230]],'#ff7a00',3,null,'w-gpio3');
+  wire(svg,[[280,230],[320,295]],'#ff7a00',3,null,'w-gpio3');
+
+  // ── BC547 TRANSISTOR ──
+  const bc=compG(svg,'comp-bc547');
+  // Body circle
+  circle(365,295,36,{fill:'#090608',stroke:'#775533','stroke-width':'2.5'},bc);
+  circle(365,295,24,{fill:'#060405',stroke:'#442211','stroke-width':'1'},bc);
+  text('BC547',365,291,{fill:'#775533','font-size':'11','font-weight':'700','text-anchor':'middle','font-family':'IBM Plex Mono'},bc);
+  text('NPN',365,305,{fill:'#664422','font-size':'9.5','text-anchor':'middle','font-family':'IBM Plex Mono'},bc);
+
+  // Base terminal
+  line(329,295,340,295,{stroke:'#ff7a00','stroke-width':'3'},bc);
+  circle(329,295,5,{fill:'#ff7a00',stroke:'#ffaa00','stroke-width':'1.5'},bc);
+  text('B',313,299,{fill:'#ff8800','font-size':'12','font-weight':'700','text-anchor':'middle','font-family':'IBM Plex Mono'},bc);
+
+  // Collector (up)
+  line(365,259,365,190,{stroke:'#885533','stroke-width':'2.5'},bc);
+  circle(365,190,5,{fill:'#885533',stroke:'#aa6644','stroke-width':'1.5'},bc);
+  text('C',380,192,{fill:'#885533','font-size':'11','font-weight':'700','font-family':'IBM Plex Mono'},bc);
+
+  // Emitter (down → GND)
+  line(365,331,365,460,{stroke:'#2a5070','stroke-width':'2.5'},bc);
+  circle(365,460,5,{fill:'#2a5070'},bc);
+  text('E',380,335,{fill:'#4a6070','font-size':'11','font-weight':'700','font-family':'IBM Plex Mono'},bc);
+  text('→ GND',380,348,{fill:'#1a3050','font-size':'7.5','font-family':'IBM Plex Mono'},bc);
+
+  // ── 1N4007 DIODE (vertical) ──
+  const dio=compG(svg,'comp-diode');
+  // K (top) connection
+  line(420,32,420,115,{stroke:'#6622aa','stroke-width':'2'},dio);
+  circle(420,32,5,{fill:'#553300'},dio); // connects to 5V rail
+
+  // Cathode bar
+  line(406,115,434,115,{stroke:'#a855f7','stroke-width':'3.5'},dio);
+  text('K',438,119,{fill:'#a855f7','font-size':'11','font-weight':'700','font-family':'IBM Plex Mono'},dio);
+
+  // Triangle body (pointing up toward K)
+  path('M420,115 L406,148 L434,148 Z',{fill:'#1a0030',stroke:'#a855f7','stroke-width':'2'},dio);
+
+  // Anode bar
+  line(406,148,434,148,{stroke:'#a855f7','stroke-width':'2'},dio);
+  text('A',438,152,{fill:'#a855f7','font-size':'11','font-weight':'700','font-family':'IBM Plex Mono'},dio);
+
+  // Anode wire down to Collector junction
+  line(420,148,420,190,{stroke:'#a855f7','stroke-width':'2'},dio);
+  line(420,190,365,190,{stroke:'#885533','stroke-width':'2.5'},dio);
+
+  // Labels
+  text('1N4007',450,130,{fill:'#7733bb','font-size':'9.5','font-weight':'600','font-family':'IBM Plex Mono'},dio);
+  text('Flyback diode',450,143,{fill:'#441188','font-size':'8','font-family':'IBM Plex Mono'},dio);
+  text('K→5V  A→Collector',450,156,{fill:'#331066','font-size':'7.5','font-family':'IBM Plex Mono'},dio);
+
+  // ── RELAY ──
+  const rel=compG(svg,'comp-relay');
+  rect(530,42,230,220,{fill:'#0c0808',stroke:'#775533','stroke-width':'2.5',rx:'6'},rel);
+  // Header
+  rect(530,42,230,32,{fill:'#1a0a04',stroke:'none',rx:'6'},rel);
+  rect(530,58,230,16,{fill:'#1a0a04',stroke:'none'},rel);
+  text('RELAY SRD-05VDC',645,60,{fill:'#886644','font-size':'10','font-weight':'700','text-anchor':'middle','font-family':'IBM Plex Mono'},rel);
+  text('5V coil · 10A/250VAC contacts',645,74,{fill:'#553300','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono'},rel);
+  // Divider
+  line(645,82,645,262,{stroke:'#2a1800','stroke-width':'1.5','stroke-dasharray':'5,4'},rel);
+  text('CUỘN COIL',588,96,{fill:'#2a1800','font-size':'9','text-anchor':'middle','font-family':'IBM Plex Mono'},rel);
+  text('TIẾP ĐIỂM',702,96,{fill:'#1a3a1a','font-size':'9','text-anchor':'middle','font-family':'IBM Plex Mono'},rel);
+
+  // Coil symbol
+  for(let i=0;i<4;i++){
+    path(`M556,${108+i*26} Q556,${95+i*26} 580,${108+i*26} Q604,${121+i*26} 604,${108+i*26}`,
+      {fill:'none',stroke:'#3a2200','stroke-width':'2'},rel);
+  }
+
+  // Coil terminals
+  const cp=g({},rel);
+  circle(530,110,8,{fill:'#cc440020',stroke:'#cc4400','stroke-width':'2'},cp);
+  text('coil+',508,114,{fill:'#aa4400','font-size':'9','text-anchor':'end','font-family':'IBM Plex Mono'},cp);
+  text('← 5V',508,126,{fill:'#553300','font-size':'7.5','text-anchor':'end','font-family':'IBM Plex Mono'},cp);
+
+  const cn=g({},rel);
+  circle(530,210,8,{fill:'#77553320',stroke:'#775533','stroke-width':'2'},cn);
+  text('coil−',508,214,{fill:'#665533','font-size':'9','text-anchor':'end','font-family':'IBM Plex Mono'},cn);
+  text('← C(BC547)',508,226,{fill:'#3a2200','font-size':'7.5','text-anchor':'end','font-family':'IBM Plex Mono'},cn);
+
+  // Contact terminals
+  const comG=g({},rel);
+  circle(760,110,8,{fill:'#00aa4420',stroke:'#1a5a1a','stroke-width':'2'},comG);
+  text('COM',784,114,{fill:'#1a5a2a','font-size':'9','font-family':'IBM Plex Mono'},comG);
+  text('Normally common',784,126,{fill:'#0f2a0f','font-size':'7.5','font-family':'IBM Plex Mono'},comG);
+
+  const noG=g({},rel);
+  circle(760,210,8,{fill:'#00aa4420',stroke:'#1a5a1a','stroke-width':'2'},noG);
+  text('NO',784,214,{fill:'#1a5a2a','font-size':'9','font-family':'IBM Plex Mono'},noG);
+  text('Normally Open',784,226,{fill:'#0f2a0f','font-size':'7.5','font-family':'IBM Plex Mono'},noG);
+
+  // Armature (open position)
+  line(760,110,778,85,{stroke:'#1a3a1a','stroke-width':'3','stroke-linecap':'round'},rel);
+  text('Nhấn → NO nối COM',645,255,{fill:'#553300','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono'},rel);
+
+  // Coil wires
+  wire(svg,[[420,32],[530,32],[530,110]],'#553300',2,'6,4','w-5v'); // 5V → coil+
+  wire(svg,[[365,190],[530,210]],'#885533',2.5,null); // Collector → coil-
+
+  // ── STARTER SWITCH (dashed) ──
+  const str=compG(svg,'w-relay-no');
+  rect(800,42,220,220,{fill:'#00200808',stroke:'#0a3a0a','stroke-width':'1.5',rx:'6','stroke-dasharray':'7,4'},str);
+  text('NÚT ĐỀ XE',910,62,{fill:'#0a3a0a','font-size':'9.5','font-weight':'600','text-anchor':'middle','font-family':'IBM Plex Mono'},str);
+  text('(song song Relay NO+COM)',910,76,{fill:'#062006','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},str);
+  text('Không cắt dây gốc!',910,90,{fill:'#041404','font-size':'7.5','text-anchor':'middle','font-family':'IBM Plex Mono'},str);
+
+  circle(800,110,7,{fill:'none',stroke:'#1a4a1a','stroke-width':'2'},str);
+  circle(800,210,7,{fill:'none',stroke:'#1a4a1a','stroke-width':'2'},str);
+  line(800,110,816,86,{stroke:'#1a3a1a','stroke-width':'2.5','stroke-linecap':'round'},str);
+  text('COM',820,116,{fill:'#1a4a1a','font-size':'9','font-family':'IBM Plex Mono'},str);
+  text('NO',820,216,{fill:'#1a4a1a','font-size':'9','font-family':'IBM Plex Mono'},str);
+  text('→ Máy đề 12V',910,255,{fill:'#0a2a0a','font-size':'8.5','text-anchor':'middle','font-family':'IBM Plex Mono'},str);
+
+  // Relay → Starter wires
+  wire(svg,[[760,110],[800,110]],'#1a4a1a',2.5,null,'w-relay-com');
+  wire(svg,[[760,210],[800,210]],'#1a4a1a',2.5,null,'w-relay-no');
+
+  // ── BUCK CONVERTER ──
+  compBox(svg,310,350,200,90,[
+    {t:'LM2596',c:'#664422',sz:12,w:'700'},{t:'BUCK CONVERTER',c:'#442200',sz:9},{t:'12V → 5.00V',c:'#331800',sz:9}
+  ],'#664422','#0a0600','comp-buck');
+  // Buck terminals
+  const bkIN=compG(svg,'w-12v');
+  circle(310,390,7,{fill:'#ff225520',stroke:'#ff2255','stroke-width':'2'},bkIN);
+  text('IN+ 12V',296,394,{fill:'#cc2244','font-size':'9','text-anchor':'end','font-family':'IBM Plex Mono'},bkIN);
+  const bkGND=compG(svg,'w-gnd');
+  circle(310,420,6,{fill:'#3a506020',stroke:'#3a5060','stroke-width':'1.5'},bkGND);
+  text('IN−',296,424,{fill:'#3a5060','font-size':'9','text-anchor':'end','font-family':'IBM Plex Mono'},bkGND);
+  // OUT+
+  const bkOUT=compG(svg,'w-5v');
+  circle(510,380,7,{fill:'#cc440020',stroke:'#cc4400','stroke-width':'2'},bkOUT);
+  text('OUT+',525,384,{fill:'#aa4400','font-size':'9','font-family':'IBM Plex Mono'},bkOUT);
+  text('5.00V',525,396,{fill:'#883300','font-size':'8','font-family':'IBM Plex Mono'},bkOUT);
+  // Buck OUT → 5V rail
+  wire(svg,[[510,380],[510,350],[420,350],[420,32]],'#553300',2,'6,4','w-5v');
+  // Buck IN- → GND
+  wire(svg,[[310,420],[310,460]],'#2a5070',1.5,'4,3');
+
+  // ── 12V BATTERY ──
+  const bat=compG(svg,'comp-bat');
+  rect(620,355,200,85,{fill:'#0a0a04',stroke:'#887700','stroke-width':'2.5',rx:'6'},bat);
+  text('12V BÌNH XE MÁY',720,377,{fill:'#887700','font-size':'10','font-weight':'700','text-anchor':'middle','font-family':'IBM Plex Mono'},bat);
+  text('Kết nối từ bình xe',720,392,{fill:'#554400','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono'},bat);
+  // + terminal
+  circle(640,415,9,{fill:'#ff225520',stroke:'#ff2255','stroke-width':'2.5'},bat);
+  text('+',640,420,{fill:'#cc2244','font-size':'14','font-weight':'700','text-anchor':'middle','font-family':'IBM Plex Mono'},bat);
+  text('+12V',640,434,{fill:'#881122','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono'},bat);
+  // - terminal
+  circle(800,415,9,{fill:'#3a506020',stroke:'#3a5060','stroke-width':'2.5'},bat);
+  text('−',800,420,{fill:'#3a5060','font-size':'14','font-weight':'700','text-anchor':'middle','font-family':'IBM Plex Mono'},bat);
+  text('GND',800,434,{fill:'#1a3050','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono'},bat);
+
+  // 12V+ → Buck IN+
+  wire(svg,[[640,415],[310,415],[310,390]],'#ff2255',3.5,null,'w-12v');
+  // Add label
+  rect(380,405,130,16,{fill:'#05060a',rx:'3'},svg);
+  text('+12V → IN+ (ĐỎ)',445,416,{fill:'#cc2244','font-size':'8','text-anchor':'middle','font-family':'IBM Plex Mono'},svg);
+  // 12V- → GND
+  wire(svg,[[800,415],[800,460]],'#2a5070',2.5,'5,4','w-gnd');
+
+  // ── CAPACITOR near E2 ──
+  const cap2=compG(svg,'comp-cap');
+  line(160,110,160,330,{stroke:'#2a3a5a','stroke-width':'.8','stroke-dasharray':'3,5'},cap2);
+  line(160,330,178,330,{stroke:'#2a3a5a','stroke-width':'1.5'},cap2);
+  rect(178,321,24,10,{fill:'#0a0a14',stroke:'#334466','stroke-width':'1.5',rx:'2'},cap2);
+  rect(178,333,24,10,{fill:'#0a0a14',stroke:'#334466','stroke-width':'1.5',rx:'2'},cap2);
+  line(190,343,190,460,{stroke:'#2a3a5a','stroke-width':'1.5','stroke-dasharray':'4,3'},cap2);
+  text('+',168,328,{fill:'#4488aa','font-size':'10','font-weight':'700','font-family':'IBM Plex Mono'},cap2);
+  text('−',168,342,{fill:'#4488aa','font-size':'10','font-weight':'700','font-family':'IBM Plex Mono'},cap2);
+  text('100µF/25V',208,330,{fill:'#224466','font-size':'8.5','font-family':'IBM Plex Mono'},cap2);
+  text('// VIN–GND',208,342,{fill:'#162a3a','font-size':'8','font-family':'IBM Plex Mono'},cap2);
+
+  // ── LEGEND ──
+  rect(825,285,220,142,{fill:'#06080e',stroke:'#162038','stroke-width':'1',rx:'6'},svg);
+  text('MÀU DÂY',935,302,{fill:'#1e3050','font-size':'9','text-anchor':'middle','font-family':'IBM Plex Mono','letter-spacing':'2'},svg);
+  const mLeg=[
+    {c:'#ff7a00',d:'solid',l:'Cam — GPIO3 → 1kΩ'},
+    {c:'#885533',d:'solid',l:'Nâu — Collector → coil−'},
+    {c:'#a855f7',d:'solid',l:'Tím — 1N4007 (flyback)'},
+    {c:'#1a5a1a',d:'solid',l:'Xanh lá — Relay NO/COM'},
+    {c:'#ff2255',d:'solid',l:'Đỏ — +12V → Buck'},
+    {c:'#553300',d:'9,5',l:'Cam tối — 5V Rail'},
+    {c:'#2a5070',d:'5,4',l:'Đen — GND'},
+  ];
+  mLeg.forEach((ll,i)=>{
+    const y=316+i*16;
+    if(ll.d==='solid') line(833,y,866,y,{stroke:ll.c,'stroke-width':'3'},svg);
+    else line(833,y,866,y,{stroke:ll.c,'stroke-width':'2.5','stroke-dasharray':ll.d},svg);
+    text(ll.l,872,y+4.5,{fill:ll.c+'99','font-size':'8','font-family':'IBM Plex Mono'},svg);
+  });
+}
+
+// ════════════════ SIMULATION ════════════════
+const cv=document.getElementById('simCv');
+const ctx=cv.getContext('2d');
+let W=600,fr=0,pressed=false,pkts=0;
+let ST={g2:false,en:false,g3:false,bc:false,rl:false,mt:false};
+let ptcls=[],tmrs=[];
+
+function resizeCv(){W=Math.max(cv.parentElement.clientWidth||600,580);cv.width=W;}
+resizeCv();window.addEventListener('resize',resizeCv);
+
+const DW=880,DH=430;
+const CC={red:'#ff2255',gnd:'#2a5070',cyan:'#00aaff',blue:'#4488ff',
+  green:'#00ff88',orange:'#ff7a00',yellow:'#ffc400',purple:'#a855f7',dim:'#0d1a2e'};
+
+function px(x){return x*(W/DW);}function py(y){return y;}function sc(v){return v*(W/DW);}
+
+function ww(pts,col,lw,dash,glow){
+  if(!pts||pts.length<2)return;
+  ctx.save();ctx.beginPath();
+  ctx.moveTo(px(pts[0][0]),py(pts[0][1]));
+  for(let i=1;i<pts.length;i++) ctx.lineTo(px(pts[i][0]),py(pts[i][1]));
+  ctx.setLineDash(dash||[]);ctx.strokeStyle=col;
+  ctx.lineWidth=sc(lw||3);ctx.lineJoin='round';ctx.lineCap='round';
+  if(glow){ctx.shadowColor=col;ctx.shadowBlur=sc(10);}
+  ctx.stroke();ctx.shadowBlur=0;ctx.setLineDash([]);ctx.restore();
+}
+function dot(x,y,r,col,glow){
+  ctx.save();ctx.beginPath();ctx.arc(px(x),py(y),sc(r),0,Math.PI*2);
+  ctx.fillStyle=col;if(glow){ctx.shadowColor=col;ctx.shadowBlur=sc(10);}
+  ctx.fill();ctx.shadowBlur=0;ctx.restore();
+}
+function box(x,y,w,h,rx,fill,stroke,lw){
+  ctx.save();const X=px(x),Y=py(y),W2=sc(w),H=sc(h),R=sc(rx||0);
+  ctx.beginPath();ctx.moveTo(X+R,Y);ctx.lineTo(X+W2-R,Y);ctx.quadraticCurveTo(X+W2,Y,X+W2,Y+R);
+  ctx.lineTo(X+W2,Y+H-R);ctx.quadraticCurveTo(X+W2,Y+H,X+W2-R,Y+H);
+  ctx.lineTo(X+R,Y+H);ctx.quadraticCurveTo(X,Y+H,X,Y+H-R);
+  ctx.lineTo(X,Y+R);ctx.quadraticCurveTo(X,Y,X+R,Y);ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=sc(lw||2);ctx.stroke();}
+  ctx.restore();
+}
+function txt(t,x,y,col,sz,align){
+  ctx.save();ctx.fillStyle=col;ctx.font=`${sc(sz||8.5)}px IBM Plex Mono`;
+  ctx.textAlign=align||'center';ctx.fillText(t,px(x),py(y));ctx.restore();
+}
+function lbl(t,x,y,col,sz){
+  ctx.save();const bsz=sc(sz||8.5);ctx.font=`${bsz}px IBM Plex Mono`;
+  const tw=ctx.measureText(t).width;
+  ctx.fillStyle='rgba(4,6,12,.88)';ctx.fillRect(px(x)-tw/2-sc(2),py(y)-bsz,tw+sc(4),bsz+sc(4));
+  ctx.fillStyle=col;ctx.textAlign='center';ctx.fillText(t,px(x),py(y));ctx.restore();
+}
+
+// Positions
+const NK2={x1:15,x2:115,cx:65};
+const R10K2={x:150,y1:140,y2:220};
+const E12={x1:195,x2:300,cx:247};
+const WX2=360;
+const E22={x1:420,x2:525,cx:472};
+const R1K2={x1:540,x2:596,y:240};
+const BC2={cx:640,cy:310,r:28};
+const REL2={x1:700,x2:800,y1:40,y2:220};
+const STR2={x1:810,x2:878,y1:40,y2:220};
+const BUCK2={x1:530,x2:650,y1:340,y2:410};
+const BAT2={cx:760,cy:375};
+const GY=420;
+const Y2={bplus:155,gnd:190,btnA:288,btnB:314,
+  e1vin:90,e1gnd:128,e1_3v3:185,e1io2:250,
+  e2vin:90,e2gnd:128,e2io3:250,
+  rcp:82,rcn:172,rno:82,rcom:172,r5v:28,
+  bkin:370,bkout:370,bcbase:310,bccoll:220,bcemit:338};
+
+function drawSim(){
+  ctx.clearRect(0,0,W,DH);
+  ctx.fillStyle='#04060c';ctx.fillRect(0,0,W,DH);
+  // Grid
+  ctx.strokeStyle='rgba(12,20,40,.55)';ctx.lineWidth=.5;
+  for(let x=0;x<W;x+=sc(28)){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,DH);ctx.stroke();}
+  for(let y=0;y<DH;y+=sc(28)){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Rails
+  ww([[NK2.x1,GY],[BAT2.cx+50,GY]],CC.gnd,3);
+  lbl('GND RAIL',440,GY+12,'#1a3050',7.5);
+  ww([[E22.x1,Y2.r5v],[REL2.x2+20,Y2.r5v]],'#442200',2,[8,4]);
+  lbl('5V RAIL',640,Y2.r5v-7,'#2a1800',7.5);
+
+  // ── NOKIA ──
+  box(NK2.x1,28,NK2.x2-NK2.x1,380,8,'#070a14','#1e3050',1.5);
+  txt('NOKIA',NK2.cx,46,'#1e3050',9.5);
+  box(NK2.x1+5,52,NK2.x2-NK2.x1-10,52,3,'#030a03','#163016',1);
+  txt('NOKIA',NK2.cx,74,'#0a3a0a',8);
+  const nTxt=ST.mt?'⚡ĐANG ĐỀ!':ST.en?'📡GỬI...':'Chờ lệnh';
+  txt(nTxt,NK2.cx,90,ST.mt?CC.green:ST.en?CC.cyan:'#0a3a0a',8);
+
+  // Battery section
+  box(NK2.x1+4,118,NK2.x2-NK2.x1-8,88,4,'rgba(255,122,0,.04)','rgba(255,122,0,.3)',1);
+  txt('BATTERY CONN',NK2.cx,132,'#553300',7.5);
+  // Pads
+  const bpX=NK2.x1+22;
+  box(bpX,138,38,28,2,'rgba(255,34,85,.1)','#ff2255',1.5);
+  txt('B+',bpX+19,151,'#ff5577',9.5);txt('3.7V',bpX+19,162,'#aa1133',7.5);
+  dot(bpX+19,Y2.bplus+12,5.5,CC.red,true);
+  box(NK2.x1+66,138,24,28,2,'#0808080a','#1a1a1a',1);
+  txt('BSI',NK2.x1+78,155,'#222',8);
+  const gpX=NK2.x1+96;
+  box(gpX,138,36,28,2,'rgba(58,80,96,.12)','#3a5060',1.5);
+  txt('GND',gpX+18,151,'#4a6070',9.5);txt('0V',gpX+18,162,'#2a3a50',7.5);
+  dot(gpX+18,Y2.gnd+12,5.5,'#2a5070',false);
+
+  // Button section
+  box(NK2.x1+4,218,NK2.x2-NK2.x1-8,148,4,'rgba(0,170,255,.04)','rgba(0,170,255,.3)',1);
+  txt('NÚT NGUỒN',NK2.cx,232,'#003366',7.5);
+  // Button circle
+  ctx.save();ctx.beginPath();ctx.arc(px(NK2.cx),py(278),sc(30),0,Math.PI*2);
+  ctx.fillStyle=pressed?'#0c1224':'#141a2a';ctx.fill();
+  ctx.strokeStyle=pressed?CC.cyan:'#263850';ctx.lineWidth=sc(2.5);
+  if(pressed){ctx.shadowColor=CC.cyan;ctx.shadowBlur=sc(18);}
+  ctx.stroke();ctx.shadowBlur=0;ctx.restore();
+  ctx.save();ctx.beginPath();ctx.arc(px(NK2.cx),py(278),sc(18),0,Math.PI*2);
+  ctx.fillStyle=pressed?'#080e1c':'#0d1220';ctx.fill();ctx.restore();
+  txt('⏻',NK2.cx,285,pressed?CC.cyan:'#263850',16);
+
+  // Contacts
+  const acol=ST.g2?CC.cyan:'#0a2030';
+  dot(NK2.x1+22,Y2.btnA,9,acol,ST.g2);txt('A',NK2.x1+22,Y2.btnA+4.5,acol,9.5);
+  txt('Điểm A',NK2.x1+22,Y2.btnA+18,'#003355',7.5);
+  dot(NK2.x1+95,Y2.btnB,9,'#1a2535',false);txt('B',NK2.x1+95,Y2.btnB+4.5,'#334455',9.5);
+  txt('→GND',NK2.x1+95,Y2.btnB+18,'#1a2535',7.5);
+  ctx.save();ctx.setLineDash([sc(4),sc(4)]);
+  ctx.strokeStyle='#1a2e48';ctx.lineWidth=sc(1.5);
+  ctx.beginPath();ctx.moveTo(px(NK2.x1+31),py(Y2.btnA));ctx.lineTo(px(NK2.x1+86),py(Y2.btnB));
+  ctx.stroke();ctx.setLineDash([]);ctx.restore();
+  txt(ST.g2?'⚡A→B ĐÓNG':'A hở',NK2.cx,360,ST.g2?CC.green:'#1e3a58',8);
+
+  // ── WIRES NK → E1 ──
+  const g2c=ST.g2?CC.active:'#0088aa';
+  ww([[bpX+19,Y2.bplus+12],[bpX+19,GY-10],[178,GY-10],[178,Y2.e1vin],[E12.x1,Y2.e1vin]],CC.red,3.5,[],true);
+  lbl('B+→VIN(ĐỎ)',130,GY-14,CC.red,7.5);
+  ww([[gpX+18,Y2.gnd+12],[gpX+18,GY]],CC.gnd,2.5,[6,4]);
+  ww([[E12.x1,Y2.e1gnd],[182,Y2.e1gnd],[182,GY]],CC.gnd,2,[5,4]);
+  ww([[E12.x1,Y2.e1_3v3],[R10K2.x,Y2.e1_3v3],[R10K2.x,R10K2.y1]],CC.blue,2,[7,4]);
+  ww([[R10K2.x,R10K2.y2],[E12.x1,Y2.e1io2]],g2c,3,[],ST.g2);
+  ww([[NK2.x1+22,Y2.btnA],[NK2.x1+22,GY-15],[136,GY-15],[136,R10K2.y2],[R10K2.x,R10K2.y2]],g2c,2.5,[],ST.g2);
+  dot(R10K2.x,R10K2.y2,7,ST.g2?CC.cyan:CC.blue,ST.g2);
+  ww([[NK2.x1+95,Y2.btnB],[NK2.x1+95,GY]],CC.gnd,2,[5,4]);
+
+  // ── 10kΩ ──
+  box(R10K2.x-11,R10K2.y1,22,R10K2.y2-R10K2.y1,3,'#0a0a08','#997744',2);
+  [{y:R10K2.y1+8,c:'#cc2222'},{y:R10K2.y1+22,c:'#dd8800'},{y:R10K2.y1+36,c:'#ddaa00'},{y:R10K2.y1+50,c:'#999'}].forEach(b=>{
+    ctx.fillStyle=b.c;ctx.fillRect(px(R10K2.x-9),b.y,sc(18),sc(11));
+  });
+  dot(R10K2.x,R10K2.y1,5,CC.blue,false);
+  lbl('10kΩ',R10K2.x+24,R10K2.y1+40,'#997744',8.5);
+
+  // ── ESP32-C3 #1 ──
+  box(E12.x1,28,E12.x2-E12.x1,370,7,'#050d05','#1a4a1a',2);
+  txt('ESP32-C3',E12.cx,50,CC.green,9.5);txt('#1 TX',E12.cx,64,'#1a5a1a',8.5);
+  // Pins
+  const e1p=[{y:Y2.e1vin,c:CC.red,n:'VIN',v:'3.7V'},{y:Y2.e1gnd,c:CC.gnd,n:'GND',v:'0V'},
+    {y:Y2.e1_3v3,c:CC.blue,n:'3V3',v:'3.3V'},{y:Y2.e1io2,c:ST.g2?CC.green:CC.cyan,n:'GPIO2',v:ST.g2?'LOW':'HIGH',glow:ST.g2}];
+  e1p.forEach(p=>{
+    dot(E12.x1,p.y,6,p.c,p.glow);
+    ctx.save();ctx.fillStyle='rgba(5,13,5,.9)';
+    const bw=sc(60),bh=sc(14);
+    ctx.fillRect(px(E12.x1)+sc(3),p.y-sc(7),bw,bh);
+    ctx.fillStyle=p.c;ctx.font=`${sc(8.5)}px IBM Plex Mono`;ctx.textAlign='left';
+    ctx.fillText(p.n,px(E12.x1)+sc(5),p.y+sc(4));
+    ctx.fillStyle='rgba(5,13,5,.9)';ctx.fillRect(px(E12.x2)-sc(32),p.y-sc(7),sc(30),bh);
+    ctx.fillStyle=p.c;ctx.textAlign='right';ctx.fillText(p.v,px(E12.x2)-sc(4),p.y+sc(4));
+    ctx.restore();
+  });
+  txt('📡',E12.cx,340,CC.green,24);txt('TX',E12.cx,360,'#1a4a1a',8.5);
+
+  // E1 GND rail
+  ww([[E12.x1,Y2.e1gnd],[182,Y2.e1gnd]],CC.gnd,1.5,[4,3]);
+
+  // ── WIRELESS ──
+  for(let i=0;i<4;i++){
+    const ph=((fr*.022+i*.25)%1);
+    const r2=ph*56;const al=(1-ph)*(ST.en?.85:.2);
+    ctx.save();ctx.beginPath();ctx.arc(px(WX2),py(200),sc(r2),0,Math.PI*2);
+    ctx.strokeStyle=`rgba(0,255,136,${al})`;ctx.lineWidth=sc(1.5);
+    if(ST.en){ctx.shadowColor=CC.green;ctx.shadowBlur=sc(8);}
+    ctx.stroke();ctx.shadowBlur=0;ctx.restore();
+  }
+  lbl('ESP-NOW',WX2,196,ST.en?CC.green:'#0f2030',9.5);
+  lbl(ST.en?'>>  >>':'·  ·  ·',WX2,213,ST.en?CC.green:'#0a1828',9);
+  lbl('2.4GHz',WX2,228,ST.en?'#00cc66':'#08141e',8);
+  ww([[E12.x2,200],[E22.x1,200]],ST.en?CC.green:CC.dim,2,[ST.en?2:5,4],ST.en);
+
+  // ── ESP32-C3 #2 ──
+  box(E22.x1,28,E22.x2-E22.x1,370,7,'#050d05','#1a4a1a',2);
+  txt('ESP32-C3',E22.cx,50,CC.green,9.5);txt('#2 RX',E22.cx,64,'#1a5a1a',8.5);
+  const e2p=[{y:Y2.e2vin,c:'#cc4400',n:'VIN',v:'5V',side:'l'},{y:Y2.e2gnd,c:CC.gnd,n:'GND',v:'0V',side:'l'},
+    {y:Y2.e2io3,c:ST.g3?CC.orange:CC.dim,n:'GPIO3',v:ST.g3?'HIGH':'LOW',glow:ST.g3,side:'r'}];
+  e2p.forEach(p=>{
+    const ex=p.side==='r'?E22.x2:E22.x1;
+    dot(ex,p.y,6,p.c,p.glow);
+    ctx.save();const bw=sc(58),bh=sc(14);
+    const bx=p.side==='r'?px(ex)-bw-sc(3):px(ex)+sc(3);
+    ctx.fillStyle='rgba(5,13,5,.9)';ctx.fillRect(bx,p.y-sc(7),bw,bh);
+    ctx.fillStyle=p.c;ctx.font=`${sc(8.5)}px IBM Plex Mono`;
+    ctx.textAlign=p.side==='r'?'right':'left';
+    ctx.fillText(p.n,p.side==='r'?bx+bw-sc(3):bx+sc(3),p.y+sc(4));ctx.restore();
+  });
+  txt('📡',E22.cx,340,CC.green,24);txt('RX',E22.cx,360,'#1a4a1a',8.5);
+  ww([[E22.x1,Y2.e2vin],[E22.x1,Y2.r5v]],'#442200',2,[5,4]);
+  ww([[E22.x1,Y2.e2gnd],[E22.x1,GY]],CC.gnd,2,[4,3]);
+
+  // ── GPIO3 → 1kΩ ──
+  const g3c=ST.g3?CC.orange:CC.dim;
+  ww([[E22.x2,Y2.e2io3],[R1K2.x1,R1K2.y]],g3c,3,[],ST.g3);
+  box(R1K2.x1,R1K2.y-9,R1K2.x2-R1K2.x1,18,3,'#0a0808','#886644',2);
+  [{x:R1K2.x1+3,c:'#cc3333'},{x:R1K2.x1+14,c:'#111'},{x:R1K2.x1+25,c:'#cc2222'},{x:R1K2.x1+36,c:'#999'}].forEach(b=>{
+    ctx.fillStyle=b.c;ctx.fillRect(px(b.x),R1K2.y-sc(6),sc(8),sc(12));
+  });
+  lbl('1kΩ',R1K2.x1+28,R1K2.y-13,'#886644',8.5);
+  ww([[R1K2.x2,R1K2.y],[BC2.cx-BC2.r-2,BC2.cy]],g3c,3,[],ST.g3);
+
+  // ── BC547 ──
+  const bcc2=ST.bc?CC.orange:'#775533';
+  ctx.save();ctx.beginPath();ctx.arc(px(BC2.cx),py(BC2.cy),sc(BC2.r),0,Math.PI*2);
+  ctx.fillStyle=ST.bc?'#1a0804':'#09050a';ctx.fill();
+  ctx.strokeStyle=bcc2;ctx.lineWidth=sc(2.5);
+  if(ST.bc){ctx.shadowColor=bcc2;ctx.shadowBlur=sc(14);}
+  ctx.stroke();ctx.shadowBlur=0;ctx.restore();
+  txt('BC547',BC2.cx,BC2.cy-4,bcc2,11);txt('NPN',BC2.cx,BC2.cy+9,bcc2,9.5);
+  ww([[BC2.cx-BC2.r-2,BC2.cy],[BC2.cx-BC2.r,BC2.cy]],g3c,3,[],ST.g3);
+  lbl('B',BC2.cx-BC2.r-14,BC2.cy+4,'#995522',9);
+  ww([[BC2.cx,BC2.cy-BC2.r],[BC2.cx,Y2.bccoll],[REL2.x1,Y2.rcn]],ST.bc?'#885533':CC.dim,2.5,[],ST.bc);
+  lbl('C',BC2.cx+8,BC2.cy-BC2.r-5,'#885533',9);
+  ww([[BC2.cx,BC2.cy+BC2.r],[BC2.cx,GY]],CC.gnd,2.5,[],false);
+  lbl('E',BC2.cx+9,BC2.cy+BC2.r+14,'#4a6070',9);
+
+  // 1N4007
+  const diox=REL2.x1-22;
+  ww([[diox,Y2.r5v],[diox,Y2.rcp-8]],CC.purple,2);
+  ctx.save();ctx.beginPath();ctx.moveTo(px(diox),py(Y2.rcp-8));
+  ctx.lineTo(px(diox-10),py(Y2.rcp+12));ctx.lineTo(px(diox+10),py(Y2.rcp+12));ctx.closePath();
+  ctx.fillStyle='#1a0030';ctx.fill();ctx.strokeStyle=CC.purple;ctx.lineWidth=sc(1.8);ctx.stroke();ctx.restore();
+  ctx.save();ctx.strokeStyle=CC.purple;ctx.lineWidth=sc(2.5);
+  ctx.beginPath();ctx.moveTo(px(diox-11),py(Y2.rcp-8));ctx.lineTo(px(diox+11),py(Y2.rcp-8));ctx.stroke();ctx.restore();
+  ww([[diox,Y2.rcp+12],[diox,Y2.rcn],[REL2.x1,Y2.rcn]],CC.purple,1.8);
+  ww([[diox,Y2.r5v],[REL2.x1,Y2.r5v],[REL2.x1,Y2.rcp]],'#442200',2,[6,4]);
+  lbl('1N4007',diox-24,Y2.rcp,'#7733bb',8);
+
+  // ── RELAY ──
+  const rlc=ST.rl?'#cc5500':'#664422';
+  box(REL2.x1,REL2.y1,REL2.x2-REL2.x1,REL2.y2-REL2.y1,5,'#0c0800',rlc,2.5);
+  txt('RELAY',REL2.cx,REL2.y1+17,rlc,10);txt('SRD-05VDC',(REL2.x1+REL2.x2)/2,REL2.y1+30,'#442200',8.5);
+  ctx.save();ctx.strokeStyle='#221100';ctx.lineWidth=sc(1);ctx.setLineDash([sc(3),sc(3)]);
+  ctx.beginPath();ctx.moveTo(px(REL2.cx),py(REL2.y1));ctx.lineTo(px(REL2.cx),py(REL2.y2));ctx.stroke();
+  ctx.setLineDash([]);ctx.restore();
+  lbl('CUỘN',(REL2.x1+REL2.cx)/2,REL2.y1+52,'#2a1800',8.5);
+  lbl('TIẾP ĐIỂM',(REL2.cx+REL2.x2)/2,REL2.y1+52,ST.rl?'#1a5a1a':'#0a2a0a',8.5);
+  // Coil symbol
+  for(let i=0;i<3;i++){
+    ctx.save();ctx.beginPath();ctx.arc(px(REL2.x1+24),py(REL2.y1+75+i*24),sc(10),Math.PI,0);
+    ctx.strokeStyle='#3a2200';ctx.lineWidth=sc(2);ctx.stroke();ctx.restore();
+  }
+  dot(REL2.x1,Y2.rcp,7,ST.rl?'#cc4400':CC.dim,ST.rl);lbl('coil+',REL2.x1-20,Y2.rcp+4,'#aa4400',8);
+  dot(REL2.x1,Y2.rcn,7,ST.bc?'#885533':CC.dim,ST.bc);lbl('coil-',REL2.x1-20,Y2.rcn+4,'#665533',8);
+  // Contacts
+  const rcc2=ST.rl?CC.green:'#1a3a1a';
+  dot(REL2.x2,Y2.rno,7,rcc2,ST.rl);lbl('NO',REL2.x2+14,Y2.rno+4,rcc2,9);
+  dot(REL2.x2,Y2.rcom,7,rcc2,ST.rl);lbl('COM',REL2.x2+16,Y2.rcom+4,rcc2,9);
+  ctx.save();ctx.beginPath();ctx.moveTo(px(REL2.x2),py(Y2.rno));
+  if(ST.rl) ctx.lineTo(px(REL2.x2),py(Y2.rcom));else ctx.lineTo(px(REL2.x2+14),py(Y2.rno-22));
+  ctx.strokeStyle=rcc2;ctx.lineWidth=sc(3);
+  if(ST.rl){ctx.shadowColor=CC.green;ctx.shadowBlur=sc(10);}
+  ctx.stroke();ctx.shadowBlur=0;ctx.restore();
+
+  // ── STARTER ──
+  const stc=ST.mt?CC.green:'#0a2a0a';
+  box(STR2.x1,STR2.y1,STR2.x2-STR2.x1,STR2.y2-STR2.y1,5,ST.mt?'rgba(0,255,136,.05)':'rgba(0,20,0,.06)',stc,1.5);
+  ctx.save();ctx.setLineDash(ST.mt?[]:[sc(5),sc(4)]);ctx.strokeStyle=stc;ctx.lineWidth=sc(1.5);
+  ctx.strokeRect(px(STR2.x1),py(STR2.y1),sc(STR2.x2-STR2.x1),sc(STR2.y2-STR2.y1));
+  ctx.setLineDash([]);ctx.restore();
+  const scx=(STR2.x1+STR2.x2)/2;
+  txt('NÚT ĐỀ',scx,STR2.y1+20,stc,8.5);txt('XE',scx,STR2.y1+33,stc,8.5);
+  dot(STR2.x1,Y2.rno,6,stc,ST.mt);dot(STR2.x1,Y2.rcom,6,stc,ST.mt);
+  ctx.save();ctx.beginPath();ctx.moveTo(px(STR2.x1),py(Y2.rno));
+  if(ST.mt) ctx.lineTo(px(STR2.x1),py(Y2.rcom));else ctx.lineTo(px(STR2.x1+12),py(Y2.rno-20));
+  ctx.strokeStyle=stc;ctx.lineWidth=sc(2.5);
+  if(ST.mt){ctx.shadowColor=CC.green;ctx.shadowBlur=sc(10);}
+  ctx.stroke();ctx.shadowBlur=0;ctx.restore();
+  txt(ST.mt?'⚡ ĐỀ!':'Chờ...',scx,STR2.y1+100,ST.mt?CC.green:'#0a1a0a',ST.mt?11:8.5);
+  ww([[REL2.x2,Y2.rno],[STR2.x1,Y2.rno]],ST.rl?CC.green:'#0a2a0a',2.5,[],ST.rl);
+  ww([[REL2.x2,Y2.rcom],[STR2.x1,Y2.rcom]],ST.rl?CC.green:'#0a2a0a',2.5,[],ST.rl);
+
+  // ── BUCK ──
+  box(BUCK2.x1,BUCK2.y1,BUCK2.x2-BUCK2.x1,BUCK2.y2-BUCK2.y1,5,'#0a0600','#664422',2);
+  txt('LM2596',(BUCK2.x1+BUCK2.x2)/2,BUCK2.y1+18,'#664422',10);
+  txt('BUCK 12V→5V',(BUCK2.x1+BUCK2.x2)/2,BUCK2.y1+32,'#442200',8.5);
+  dot(BUCK2.x1,Y2.bkin,6,CC.red,false);lbl('IN+',BUCK2.x1-18,Y2.bkin+4,'#553300',8);
+  dot(BUCK2.x2,Y2.bkout,6,'#cc4400',false);lbl('OUT+5V',BUCK2.x2+28,Y2.bkout+4,'#884400',8);
+  ww([[BUCK2.x2,Y2.bkout],[BUCK2.x2,Y2.r5v],[E22.x1,Y2.r5v]],'#442200',2,[6,4]);
+  ww([[BUCK2.x1,BUCK2.y2],[BUCK2.x1,GY]],CC.gnd,2,[4,3]);
+
+  // ── BATTERY ──
+  box(BAT2.cx-45,BAT2.cy-22,90,52,5,'#0a0a04','#887700',2);
+  txt('12V BÌNH',BAT2.cx,BAT2.cy-4,'#887700',9.5);
+  dot(BAT2.cx-28,BAT2.cy+18,7,CC.red,false);lbl('+',BAT2.cx-28,BAT2.cy+32,'#cc1133',10);
+  dot(BAT2.cx+28,BAT2.cy+18,7,CC.gnd,false);lbl('−',BAT2.cx+28,BAT2.cy+32,'#2a5070',10);
+  ww([[BAT2.cx-28,BAT2.cy+18],[BUCK2.x1,BAT2.cy+18],[BUCK2.x1,Y2.bkin]],CC.red,3.5);
+  ww([[BAT2.cx+28,BAT2.cy+18],[BAT2.cx+28,GY]],CC.gnd,2.5,[5,4]);
+
+  // ── PARTICLES ──
+  ptcls=ptcls.filter(p=>p.alive);
+  ptcls.forEach(p=>{
+    p.t+=p.sp;if(p.t>p.tot){p.alive=false;return;}
+    let d=p.t,x=p.segs[0].x1,y=p.segs[0].y1;
+    for(const s of p.segs){if(d<=s.l){const f=d/s.l;x=s.x1+(s.x2-s.x1)*f;y=s.y1+(s.y2-s.y1)*f;break;}d-=s.l;}
+    dot(x,y,5,p.col,true);
+  });
+
+  // Zone labels
+  lbl('NOKIA SIDE',NK2.cx,GY+14,'#1e3050',8);
+  lbl('XE MÁY SIDE',700,GY+14,'#1e2a40',8);
+  fr++;requestAnimationFrame(drawSim);
+}
+
+function spawnP(path,col,sp){
   let tot=0,segs=[];
   for(let i=1;i<path.length;i++){
     const dx=path[i][0]-path[i-1][0],dy=path[i][1]-path[i-1][1];
     const l=Math.sqrt(dx*dx+dy*dy);
-    segs.push({x1:path[i-1][0],y1:path[i-1][1],x2:path[i][0],y2:path[i][1],l});
-    tot+=l;
+    segs.push({x1:path[i-1][0],y1:path[i-1][1],x2:path[i][0],y2:path[i][1],l});tot+=l;
   }
-  particles.push({segs,tot,t:0,spd:spd||2,col,alive:true});
-}
-function updateDrawParticles(){
-  particles=particles.filter(p=>p.alive);
-  particles.forEach(p=>{
-    p.t+=p.spd;
-    if(p.t>p.tot){p.alive=false;return;}
-    let d=p.t,x=p.segs[0].x1,y=p.segs[0].y1;
-    for(const seg of p.segs){
-      if(d<=seg.l){const f=d/seg.l;x=seg.x1+(seg.x2-seg.x1)*f;y=seg.y1+(seg.y2-seg.y1)*f;break;}
-      d-=seg.l;
-    }
-    dot2(x,y,4,p.col,true);
-  });
+  ptcls.push({segs,tot,t:0,sp:sp||2.5,col,alive:true});
 }
 
-// ─────── INTERACTION ───────
-function clearTimers(){timers.forEach(clearTimeout);timers=[];}
-function T(fn,ms){timers.push(setTimeout(fn,ms));}
 let logMs=22;
-function log(msg,cls){
-  const b=document.getElementById('logBody');
-  logMs+=Math.floor(Math.random()*80)+15;
-  const d=document.createElement('div');d.className='log-entry';
+function clrTmr(){tmrs.forEach(clearTimeout);tmrs=[];}
+function T(fn,ms){tmrs.push(setTimeout(fn,ms));}
+function addLog(msg,cls){
+  const b=document.getElementById('logBd');logMs+=Math.floor(Math.random()*80)+20;
+  const d=document.createElement('div');d.className='le';
   d.innerHTML=`<span class="lt">[${String(logMs).padStart(4,' ')}ms]</span><span class="lm ${cls||''}">${msg}</span>`;
   b.appendChild(d);b.scrollTop=b.scrollHeight;
 }
 
-function updateUI(){
-  // Header status dots
-  document.getElementById('sd-btn').className='s-dot'+(pressed?' on':'');
-  document.getElementById('sd-esp').className='s-dot'+(st.espnow?' tx':'');
-  document.getElementById('sd-relay').className='s-dot'+(st.relay?' relay':'');
-  document.getElementById('sd-moto').className='s-dot'+(st.moto?' moto':'');
-
-  // Nokia screen
-  const ns=document.getElementById('nscreen');
-  ns.textContent=st.moto?'⚡ ĐANG ĐỀ XE!':st.espnow?'📡 Đang gửi...':'Chờ lệnh...';
-  ns.style.color=st.moto?'#00ff88':st.espnow?'#00aaff':'#0a8a30';
-
-  // Button state
-  document.getElementById('pwrBtn').classList.toggle('pressed',pressed);
-  document.getElementById('ca').classList.toggle('active',st.gpio2);
-  const bs=document.getElementById('btnState');
-  bs.textContent=st.gpio2?'A→B ĐÓNG · GPIO2=LOW':'A hở · GPIO2=HIGH';
-  bs.className='btn-state'+(st.gpio2?' active':'');
-
-  // ESP32 pins
-  const io2=document.getElementById('pinIO2');
-  io2.className='pin-item pin-io2'+(st.gpio2?' low':'');
-  document.getElementById('io2val').textContent=st.gpio2?'LOW':'HIGH';
-  const io3=document.getElementById('pinIO3');
-  io3.className='pin-item pin-io3'+(st.gpio3?' high':'');
-  document.getElementById('io3val').textContent=st.gpio3?'HIGH':'LOW';
-
-  // Antenna
-  const a1=document.getElementById('ant1'),a2=document.getElementById('ant2');
-  a1.className='ant-rings'+(st.espnow?' tx':'');
-  a2.className='ant-rings'+(st.gpio3?' tx':'');
-  document.getElementById('antS1').className='ant-status'+(st.espnow?' tx':'');
-  document.getElementById('antS1').textContent=st.espnow?'TRANSMITTING':'IDLE';
-  document.getElementById('antS2').className='ant-status'+(st.gpio3?' tx':'');
-  document.getElementById('antS2').textContent=st.gpio3?'RECEIVING':'IDLE';
-
-  // State box
-  document.getElementById('sv-btn').textContent=pressed?'NHẤN GIỮ':'NHẢ';
-  document.getElementById('sv-btn').className='sv'+(pressed?' on':'');
-  document.getElementById('sv-g2').textContent=st.gpio2?'LOW ⚡':'HIGH';
-  document.getElementById('sv-g2').className='sv'+(st.gpio2?' on':'');
-  document.getElementById('sv-en').textContent=st.espnow?'SEND >>>':'IDLE';
-  document.getElementById('sv-en').className='sv'+(st.espnow?' tx':'');
-  document.getElementById('sv-g3').textContent=st.gpio3?'HIGH ⚡':'LOW';
-  document.getElementById('sv-g3').className='sv'+(st.gpio3?' hot':'');
-  document.getElementById('sv-bc').textContent=st.bc?'ON (dẫn)':'OFF';
-  document.getElementById('sv-bc').className='sv'+(st.bc?' hot':'');
-  document.getElementById('sv-rl').textContent=st.relay?'ON ⚡ ĐÓNG':'OFF';
-  document.getElementById('sv-rl').className='sv'+(st.relay?' hot':'');
-  document.getElementById('sv-mt').textContent=st.moto?'⚡ ĐANG ĐỀ!':'—';
-  document.getElementById('sv-mt').className='sv'+(st.moto?' fire':'');
-  document.getElementById('sv-pk').textContent=pkts;
-  document.getElementById('sv-pk').style.color=pkts>0?'var(--green)':'var(--text3)';
+function updUI(){
+  document.getElementById('nstxt').textContent=ST.mt?'⚡ ĐANG ĐỀ XE!':ST.en?'📡 Đang gửi...':'Chờ lệnh...';
+  document.getElementById('nstxt').style.color=ST.mt?'#00ff88':ST.en?'#00aaff':'#0a8a30';
+  document.getElementById('pwrBtn').classList.toggle('dn',pressed);
+  document.getElementById('ctA').classList.toggle('on',ST.g2);
+  document.getElementById('bst').textContent=ST.g2?'A→B ĐÓNG · LOW':'A hở · HIGH';
+  document.getElementById('bst').className='bst'+(ST.g2?' on':'');
+  document.getElementById('pio2').className='pi2 p-io2'+(ST.g2?' L':'');
+  document.getElementById('io2v').textContent=ST.g2?'LOW':'HIGH';
+  document.getElementById('pio3').className='pi2 p-io3'+(ST.g3?' H':'');
+  document.getElementById('io3v').textContent=ST.g3?'HIGH':'LOW';
+  document.getElementById('ant1').className='ar'+(ST.en?' TX':'');
+  document.getElementById('ant2').className='ar'+(ST.g3?' TX':'');
+  document.getElementById('as1').className='as'+(ST.en?' TX':'');document.getElementById('as1').textContent=ST.en?'TX':'IDLE';
+  document.getElementById('as2').className='as'+(ST.g3?' TX':'');document.getElementById('as2').textContent=ST.g3?'RX':'IDLE';
+  document.getElementById('sg2').textContent=ST.g2?'LOW ⚡':'HIGH';document.getElementById('sg2').className='sv'+(ST.g2?' G':'');
+  document.getElementById('sen').textContent=ST.en?'SENDING':'IDLE';document.getElementById('sen').className='sv'+(ST.en?' C':'');
+  document.getElementById('sg3').textContent=ST.g3?'HIGH ⚡':'LOW';document.getElementById('sg3').className='sv'+(ST.g3?' O':'');
+  document.getElementById('srl').textContent=ST.rl?'ON ⚡':'OFF';document.getElementById('srl').className='sv'+(ST.rl?' O':'');
+  document.getElementById('smt').textContent=ST.mt?'⚡ ĐỀ XE!':'—';document.getElementById('smt').className='sv'+(ST.mt?' R':'');
+  document.getElementById('spk').textContent=pkts;document.getElementById('spk').style.color=pkts?'var(--green)':'var(--dim)';
+  // Header pills
+  document.getElementById('pl-btn').className='pill'+(pressed?' on':'');
+  document.getElementById('pl-en').className='pill'+(ST.en?' tx':'');
+  document.getElementById('pl-rl').className='pill'+(ST.rl?' hot':'');
+  document.getElementById('pl-mt').className='pill'+(ST.mt?' fire':'');
 }
 
-function press(e){
-  if(e)e.preventDefault();
-  if(pressed)return;
-  pressed=true;
-  st.gpio2=true;updateUI();
-  log('GPIO2 → LOW (nút A–B đóng)','g');
-
-  T(()=>{
-    st.espnow=true;updateUI();
-    log('esp_now_send() → START','c');
-    spawnP([[NK.x1+28,Y.btnA],[155,Y.btnA],[155,Y.e1io2],[E1.x1,Y.e1io2]],COLORS.cyan,2.5);
-  },100);
-  T(()=>{
-    spawnP([[E1.x2,200],[WZ.cx,200],[E2.x1,200]],COLORS.green,3.5);
-  },200);
-  T(()=>{
-    st.gpio3=true;pkts++;updateUI();
-    log('RX: GPIO3 → HIGH','c');
-    log('BC547 Base được kích','');
-  },380);
-  T(()=>{
-    st.bc=true;updateUI();
-    log('BC547 dẫn → Collector LOW','');
-    spawnP([[E2.x2,Y.e2io3],[E2.x2+20,Y.e2io3],[E2.x2+20,Y.bcBase],[BC.cx-BC.r,Y.bcBase]],COLORS.orange,2.5);
-  },480);
-  T(()=>{
-    st.relay=true;updateUI();
-    log('RELAY ĐÓNG → NO nối COM','g');
-  },620);
-  T(()=>{
-    st.moto=true;updateUI();
-    log('⚡ MÁY ĐỀ HOẠT ĐỘNG!','g');
-  },720);
+function btnPress(e){if(e)e.preventDefault();if(pressed)return;pressed=true;
+  ST.g2=true;updUI();addLog('GPIO2 → LOW (A–B đóng)','g');
+  T(()=>{ST.en=true;updUI();addLog('esp_now_send() → START','c');
+    spawnP([[NK2.x1+22,Y2.btnA],[NK2.x1+22,GY-15],[136,GY-15],[136,R10K2.y2],[R10K2.x,R10K2.y2],[E12.x1,Y2.e1io2]],CC.cyan,3);},100);
+  T(()=>{spawnP([[E12.x2,200],[WX2,200],[E22.x1,200]],CC.green,4);},220);
+  T(()=>{ST.g3=true;pkts++;updUI();addLog('RX: GPIO3 → HIGH','c');
+    spawnP([[E22.x2,Y2.e2io3],[R1K2.x1,R1K2.y],[R1K2.x2,R1K2.y],[BC2.cx-BC2.r,BC2.cy]],CC.orange,3);},390);
+  T(()=>{ST.bc=true;updUI();addLog('BC547 dẫn (saturation)','');},490);
+  T(()=>{ST.rl=true;updUI();addLog('RELAY ĐÓNG ⚡ NO→COM','g');},630);
+  T(()=>{ST.mt=true;updUI();addLog('⚡ MÁY ĐỀ HOẠT ĐỘNG!','g');},730);
+}
+function btnRel(e){if(e)e.preventDefault();if(!pressed)return;pressed=false;clrTmr();
+  Object.keys(ST).forEach(k=>ST[k]=false);ptcls=[];updUI();
+  addLog('Nút nhả → GPIO2 HIGH','o');addLog('Gửi STOP → relay mở','o');
 }
 
-function release(e){
-  if(e)e.preventDefault();
-  if(!pressed)return;
-  pressed=false;clearTimers();
-  Object.keys(st).forEach(k=>st[k]=false);
-  particles=[];updateUI();
-  log('Nút nhả → GPIO2 HIGH','');
-  log('Gửi STOP → relay mở','');
-}
-
-// ─────── WIRE DIAGRAM SVG ───────
-function drawWireDiagram(){
-  const svg=document.getElementById('wireDiag');
-  svg.innerHTML=`
-  <defs>
-    <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-      <path d="M0,0 L0,6 L6,3 z" fill="#2a4a6a"/>
-    </marker>
-  </defs>
-  <!-- Background -->
-  <rect width="1100" height="420" fill="#06080e"/>
-  <!-- Grid lines -->
-  ${Array.from({length:44},(_,i)=>`<line x1="${i*25}" y1="0" x2="${i*25}" y2="420" stroke="#0c1428" stroke-width=".5"/>`).join('')}
-  ${Array.from({length:17},(_,i)=>`<line x1="0" y1="${i*25}" x2="1100" y2="${i*25}" stroke="#0c1428" stroke-width=".5"/>`).join('')}
-
-  <!-- ═══ NOKIA PCB ═══ -->
-  <rect x="20" y="15" width="140" height="390" rx="10" fill="#090c18" stroke="#1e3050" stroke-width="1.5"/>
-  <text x="90" y="32" text-anchor="middle" font-size="9" fill="#1e3050" letter-spacing="2">NOKIA TA-1174</text>
-
-  <!-- Battery B+ -->
-  <rect x="30" y="60" width="44" height="36" rx="3" fill="rgba(255,34,85,.1)" stroke="#ff2255" stroke-width="1.5"/>
-  <text x="52" y="78" text-anchor="middle" font-size="9" fill="#ff4466">B+</text>
-  <text x="52" y="90" text-anchor="middle" font-size="8" fill="#881122">3.7V</text>
-  <circle cx="52" cy="102" r="5" fill="#cc1133" stroke="#ff2255" stroke-width="1.5"/>
-
-  <!-- Battery BSI -->
-  <rect x="82" y="60" width="34" height="36" rx="3" fill="#0a0a0a" stroke="#1a1a1a" stroke-width="1"/>
-  <text x="99" y="82" text-anchor="middle" font-size="8" fill="#222">BSI</text>
-
-  <!-- Battery GND -->
-  <rect x="120" y="60" width="32" height="36" rx="3" fill="rgba(60,70,90,.15)" stroke="#3a4a5a" stroke-width="1.5"/>
-  <text x="136" y="78" text-anchor="middle" font-size="9" fill="#4a6070">GND</text>
-  <text x="136" y="90" text-anchor="middle" font-size="8" fill="#334455">0V</text>
-  <circle cx="136" cy="102" r="5" fill="#2a3a4a" stroke="#3a4a5a" stroke-width="1.5"/>
-
-  <!-- Battery section label -->
-  <rect x="26" y="48" width="128" height="14" rx="2" fill="rgba(255,122,0,.08)" stroke="rgba(255,122,0,.25)" stroke-width="1"/>
-  <text x="90" y="58" text-anchor="middle" font-size="7" fill="#553300">BATTERY CONNECTOR (chỗ khoanh cam)</text>
-
-  <!-- Power button section -->
-  <rect x="26" y="175" width="128" height="14" rx="2" fill="rgba(0,170,255,.06)" stroke="rgba(0,170,255,.25)" stroke-width="1"/>
-  <text x="90" y="185" text-anchor="middle" font-size="7" fill="#003366">NÚT NGUỒN (chỗ khoanh đỏ)</text>
-
-  <!-- Button circle -->
-  <circle cx="90" cy="230" r="26" fill="#0e1628" stroke="#2a3d5a" stroke-width="2"/>
-  <circle cx="90" cy="230" r="16" fill="#080c18" stroke="#1e2d44" stroke-width="1"/>
-  <text x="90" y="235" text-anchor="middle" font-size="14" fill="#2a3d5a">⏻</text>
-
-  <!-- Contact A -->
-  <circle cx="62" cy="272" r="8" fill="rgba(0,150,200,.15)" stroke="#0088cc" stroke-width="2"/>
-  <text x="62" y="276" text-anchor="middle" font-size="8" fill="#0088cc">A</text>
-  <!-- Contact B -->
-  <circle cx="118" cy="272" r="8" fill="rgba(50,60,70,.1)" stroke="#334455" stroke-width="1.5"/>
-  <text x="118" y="276" text-anchor="middle" font-size="8" fill="#445566">B</text>
-  <!-- Wire A—B dashed (button action) -->
-  <line x1="70" y1="272" x2="110" y2="272" stroke="#0066aa" stroke-width="1" stroke-dasharray="4,3"/>
-  <text x="90" y="298" text-anchor="middle" font-size="7" fill="#003366">Nhấn: A nối B</text>
-
-  <!-- ═══ 10kΩ ═══ -->
-  <rect x="165" y="128" width="18" height="60" rx="3" fill="#0a0a08" stroke="#887744" stroke-width="1.5"/>
-  <rect x="167" y="136" width="14" height="7" fill="#cc2222"/>
-  <rect x="167" y="148" width="14" height="7" fill="#dd7700"/>
-  <rect x="167" y="160" width="14" height="7" fill="#ddaa00"/>
-  <rect x="167" y="172" width="14" height="7" fill="#888888"/>
-  <text x="174" y="122" text-anchor="middle" font-size="7.5" fill="#886633">10kΩ</text>
-  <text x="191" y="148" text-anchor="start" font-size="7" fill="#554422">PULL-UP</text>
-  <text x="191" y="158" text-anchor="start" font-size="7" fill="#443311">Brown·Blk</text>
-  <text x="191" y="168" text-anchor="start" font-size="7" fill="#443311">Orange·Gold</text>
-
-  <!-- ═══ ESP32-C3 #1 ═══ -->
-  <rect x="220" y="40" width="130" height="310" rx="7" fill="#060e06" stroke="#1a4a1a" stroke-width="1.5"/>
-  <text x="285" y="60" text-anchor="middle" font-size="9" fill="#00cc66">ESP32-C3 #1</text>
-  <text x="285" y="72" text-anchor="middle" font-size="7.5" fill="#1a5a1a">TRANSMITTER</text>
-
-  <!-- E1 pins -->
-  <circle cx="220" cy="105" r="5" fill="rgba(255,34,85,.25)" stroke="#ff2255" stroke-width="1.5"/>
-  <text x="228" y="109" font-size="8" fill="#ff4466">VIN</text>
-  <circle cx="220" cy="135" r="5" fill="rgba(60,70,90,.3)" stroke="#3a4a5a" stroke-width="1.5"/>
-  <text x="228" y="139" font-size="8" fill="#4a6070">GND</text>
-  <circle cx="220" cy="165" r="5" fill="rgba(59,130,246,.2)" stroke="#3b82f6" stroke-width="1.5"/>
-  <text x="228" y="169" font-size="8" fill="#5b9af8">3V3</text>
-  <circle cx="220" cy="230" r="5" fill="rgba(0,180,220,.2)" stroke="#0088cc" stroke-width="1.5"/>
-  <text x="228" y="234" font-size="8" fill="#00aaff">GPIO2</text>
-
-  <text x="285" y="320" text-anchor="middle" font-size="18" fill="#1a5a1a">📡</text>
-  <text x="285" y="338" text-anchor="middle" font-size="7.5" fill="#1a4a1a">ESP-NOW TX</text>
-
-  <!-- ═══ WIRES NOKIA → E1 ═══ -->
-  <!-- B+ → VIN (red) -->
-  <path d="M52,102 L52,392 L210,392 L210,105 L220,105" fill="none" stroke="#ff2255" stroke-width="2.5" stroke-linejoin="round"/>
-  <rect x="95" y="383" width="75" height="14" rx="2" fill="#0a0404"/>
-  <text x="132" y="393" text-anchor="middle" font-size="7.5" fill="#cc1133">B+ → VIN (đỏ)</text>
-
-  <!-- GND → GND (dark) -->
-  <path d="M136,102 L136,397 L215,397 L215,135 L220,135" fill="none" stroke="#3a4a5a" stroke-width="2" stroke-linejoin="round"/>
-
-  <!-- 3V3 → 10kΩ top (blue dashed) -->
-  <path d="M220,165 L174,165 L174,128" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
-
-  <!-- 10kΩ bottom → junction (blue) -->
-  <path d="M174,188 L174,230" fill="none" stroke="#4488ff" stroke-width="1.5"/>
-
-  <!-- junction dot -->
-  <circle cx="174" cy="230" r="5" fill="#0088cc" stroke="#00aaff" stroke-width="1.5"/>
-
-  <!-- junction → GPIO2 (cyan) -->
-  <line x1="174" y1="230" x2="220" y2="230" stroke="#00aaff" stroke-width="2.5"/>
-
-  <!-- Button A → junction (cyan) -->
-  <path d="M62,272 L62,380 L160,380 L160,230 L174,230" fill="none" stroke="#0088cc" stroke-width="2" stroke-linejoin="round"/>
-
-  <!-- Button B → GND (dark dashed) -->
-  <path d="M118,272 L118,397" fill="none" stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="4,3"/>
-
-  <!-- ═══ WIRELESS ZONE ═══ -->
-  <text x="420" y="155" text-anchor="middle" font-size="8" fill="#0f2a3a">ESP-NOW</text>
-  <text x="420" y="168" text-anchor="middle" font-size="7.5" fill="#0a2030">2.4 GHz</text>
-  <text x="420" y="185" text-anchor="middle" font-size="9" fill="#163040">· · · · ·</text>
-  <circle cx="420" cy="200" r="18" fill="none" stroke="#0f3040" stroke-width="1" stroke-dasharray="4,3"/>
-  <circle cx="420" cy="200" r="30" fill="none" stroke="#0a2030" stroke-width="1" stroke-dasharray="6,5"/>
-  <circle cx="420" cy="200" r="42" fill="none" stroke="#071828" stroke-width="1" stroke-dasharray="8,7"/>
-  <!-- Arrow from E1 to E2 -->
-  <line x1="355" y1="200" x2="485" y2="200" stroke="#163040" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#arr)"/>
-
-  <!-- ═══ ESP32-C3 #2 ═══ -->
-  <rect x="490" y="40" width="130" height="310" rx="7" fill="#060e06" stroke="#1a4a1a" stroke-width="1.5"/>
-  <text x="555" y="60" text-anchor="middle" font-size="9" fill="#00cc66">ESP32-C3 #2</text>
-  <text x="555" y="72" text-anchor="middle" font-size="7.5" fill="#1a5a1a">RECEIVER</text>
-
-  <!-- E2 pins -->
-  <circle cx="490" cy="105" r="5" fill="rgba(200,70,0,.25)" stroke="#cc4400" stroke-width="1.5"/>
-  <text x="498" y="109" font-size="8" fill="#cc5500">VIN ← 5V</text>
-  <circle cx="490" cy="135" r="5" fill="rgba(60,70,90,.3)" stroke="#3a4a5a" stroke-width="1.5"/>
-  <text x="498" y="139" font-size="8" fill="#4a6070">GND</text>
-  <circle cx="620" cy="230" r="5" fill="rgba(255,122,0,.2)" stroke="#ff7a00" stroke-width="1.5"/>
-  <text x="612" y="234" font-size="8" fill="#ff7a00" text-anchor="end">GPIO3</text>
-
-  <text x="555" y="320" text-anchor="middle" font-size="18" fill="#1a5a1a">📡</text>
-  <text x="555" y="338" text-anchor="middle" font-size="7.5" fill="#1a4a1a">ESP-NOW RX</text>
-
-  <!-- ═══ 1kΩ ═══ -->
-  <rect x="640" y="222" width="50" height="16" rx="3" fill="#0a0808" stroke="#665533" stroke-width="1.5"/>
-  <rect x="643" y="225" width="6" height="10" fill="#cc3333"/>
-  <rect x="652" y="225" width="6" height="10" fill="#111"/>
-  <rect x="661" y="225" width="6" height="10" fill="#cc2222"/>
-  <rect x="670" y="225" width="6" height="10" fill="#888"/>
-  <text x="665" y="218" text-anchor="middle" font-size="7.5" fill="#664433">1kΩ</text>
-
-  <!-- ═══ BC547 ═══ -->
-  <circle cx="740" cy="280" r="22" fill="#080606" stroke="#664422" stroke-width="1.5"/>
-  <text x="740" y="277" text-anchor="middle" font-size="8" fill="#664422">BC547</text>
-  <text x="740" y="287" text-anchor="middle" font-size="7.5" fill="#554422">NPN</text>
-  <!-- B C E labels -->
-  <text x="712" y="284" text-anchor="end" font-size="7.5" fill="#553322">B</text>
-  <text x="744" y="254" text-anchor="start" font-size="7.5" fill="#553322">C</text>
-  <text x="744" y="310" text-anchor="start" font-size="7.5" fill="#553322">E</text>
-
-  <!-- GPIO3 → 1kΩ → Base BC547 -->
-  <path d="M620,230 L640,230" fill="none" stroke="#ff7a00" stroke-width="2"/>
-  <path d="M690,230 L720,230 L720,280 L718,280" fill="none" stroke="#ff7a00" stroke-width="2" stroke-linejoin="round"/>
-
-  <!-- Collector wire up to relay coil- -->
-  <path d="M740,258 L740,160 L800,160" fill="none" stroke="#885533" stroke-width="1.5" stroke-linejoin="round"/>
-
-  <!-- Emitter to GND rail -->
-  <path d="M740,302 L740,400" fill="none" stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="3,3"/>
-
-  <!-- ═══ RELAY ═══ -->
-  <rect x="800" y="60" width="140" height="155" rx="5" fill="#0c0800" stroke="#664422" stroke-width="1.5"/>
-  <text x="870" y="80" text-anchor="middle" font-size="9" fill="#664422">RELAY SRD-05VDC</text>
-  <line x1="870" y1="88" x2="870" y2="215" stroke="#332200" stroke-width="1" stroke-dasharray="3,3"/>
-
-  <!-- Coil side -->
-  <text x="836" y="100" text-anchor="middle" font-size="7.5" fill="#3a2200">CUỘN</text>
-  <circle cx="810" cy="128" r="4" fill="rgba(200,70,0,.2)" stroke="#cc4400" stroke-width="1.5"/>
-  <text x="808" y="132" font-size="7" fill="#663300" text-anchor="end">coil+</text>
-  <circle cx="810" cy="175" r="4" fill="rgba(100,60,0,.2)" stroke="#885522" stroke-width="1.5"/>
-  <text x="808" y="179" font-size="7" fill="#553322" text-anchor="end">coil−</text>
-
-  <!-- Contact side -->
-  <text x="905" y="100" text-anchor="middle" font-size="7.5" fill="#1a4a1a">TIẾP ĐIỂM</text>
-  <circle cx="938" cy="128" r="4" fill="rgba(0,200,80,.1)" stroke="#1a5a1a" stroke-width="1.5"/>
-  <text x="944" y="132" font-size="7" fill="#1a5a1a">COM</text>
-  <circle cx="938" cy="175" r="4" fill="rgba(0,200,80,.1)" stroke="#1a5a1a" stroke-width="1.5"/>
-  <text x="944" y="179" font-size="7" fill="#1a5a1a">NO</text>
-  <!-- Armature open -->
-  <line x1="938" y1="128" x2="950" y2="108" stroke="#1a4a1a" stroke-width="2"/>
-  <text x="870" y="206" text-anchor="middle" font-size="7.5" fill="#553322">RELAY 5V SRD</text>
-
-  <!-- 1N4007 vertical -->
-  <line x1="780" y1="128" x2="780" y2="155" stroke="#7722aa" stroke-width="1.5"/>
-  <polygon points="780,155 772,175 788,175" fill="#1a0030" stroke="#a855f7" stroke-width="1.2"/>
-  <line x1="770" y1="155" x2="790" y2="155" stroke="#a855f7" stroke-width="2"/>
-  <line x1="780" y1="175" x2="780" y2="188" stroke="#a855f7" stroke-width="1.5"/>
-  <line x1="780" y1="188" x2="810" y2="175" stroke="#7722aa" stroke-width="1.5" stroke-linejoin="round"/>
-  <text x="760" y="165" text-anchor="end" font-size="7" fill="#7722aa">1N4007</text>
-  <text x="760" y="155" text-anchor="end" font-size="7" fill="#551188">K</text>
-  <text x="760" y="180" text-anchor="end" font-size="7" fill="#551188">A</text>
-
-  <!-- 5V from relay coil+ to top -->
-  <line x1="810" y1="128" x2="780" y2="128" stroke="#553300" stroke-width="1.5"/>
-  <line x1="780" y1="128" x2="780" y2="30" stroke="#553300" stroke-width="1.5" stroke-dasharray="5,4"/>
-  <line x1="780" y1="30" x2="490" y2="30" stroke="#553300" stroke-width="1.5" stroke-dasharray="5,4"/>
-  <line x1="490" y1="30" x2="490" y2="105" stroke="#884400" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <text x="635" y="26" text-anchor="middle" font-size="7" fill="#553300">5V RAIL ←────────────────</text>
-
-  <!-- ═══ STARTER ═══ -->
-  <rect x="958" y="60" width="120" height="155" rx="5" fill="rgba(0,20,0,.1)" stroke="#0a3a0a" stroke-width="1.5" stroke-dasharray="5,3"/>
-  <text x="1018" y="80" text-anchor="middle" font-size="8" fill="#0a3a0a">NÚT ĐỀ XE</text>
-  <text x="1018" y="91" text-anchor="middle" font-size="7" fill="#062006">(song song relay)</text>
-  <circle cx="968" cy="128" r="4" fill="none" stroke="#0a3a0a" stroke-width="1.5"/>
-  <circle cx="968" cy="175" r="4" fill="none" stroke="#0a3a0a" stroke-width="1.5"/>
-  <line x1="968" y1="128" x2="980" y2="108" stroke="#0a2a0a" stroke-width="1.5"/>
-
-  <!-- Relay NO/COM → Starter -->
-  <line x1="938" y1="128" x2="968" y2="128" stroke="#1a4a1a" stroke-width="1.5"/>
-  <line x1="938" y1="175" x2="968" y2="175" stroke="#1a4a1a" stroke-width="1.5"/>
-
-  <!-- ═══ BUCK ═══ -->
-  <rect x="640" y="310" width="130" height="65" rx="5" fill="#0a0600" stroke="#664422" stroke-width="1.5"/>
-  <text x="705" y="330" text-anchor="middle" font-size="9" fill="#664422">LM2596</text>
-  <text x="705" y="342" text-anchor="middle" font-size="7.5" fill="#442200">BUCK 12V→5V</text>
-  <circle cx="645" cy="358" r="4" fill="rgba(255,34,85,.2)" stroke="#ff2255" stroke-width="1.5"/>
-  <text x="641" y="362" font-size="7" fill="#cc1133" text-anchor="end">IN+</text>
-  <circle cx="645" cy="372" r="4" fill="rgba(60,70,90,.2)" stroke="#3a4a5a" stroke-width="1.5"/>
-  <text x="641" y="376" font-size="7" fill="#3a4a5a" text-anchor="end">IN−</text>
-  <circle cx="765" cy="355" r="4" fill="rgba(200,70,0,.2)" stroke="#cc5500" stroke-width="1.5"/>
-  <text x="770" y="359" font-size="7" fill="#884422">OUT+ 5V</text>
-
-  <!-- Buck OUT+ → 5V rail line -->
-  <line x1="765" y1="355" x2="780" y2="355" stroke="#553300" stroke-width="1.5" stroke-dasharray="3,3"/>
-
-  <!-- ═══ 12V BATTERY ═══ -->
-  <rect x="820" y="305" width="100" height="65" rx="5" fill="#0a0a04" stroke="#776600" stroke-width="1.5"/>
-  <text x="870" y="325" text-anchor="middle" font-size="9" fill="#776600">12V BÌNH</text>
-  <text x="870" y="337" text-anchor="middle" font-size="7.5" fill="#443300">XE MÁY</text>
-  <circle cx="837" cy="358" r="5" fill="rgba(255,34,85,.2)" stroke="#ff2255" stroke-width="1.5"/>
-  <text x="828" y="374" text-anchor="middle" font-size="8" fill="#cc1133">+12V</text>
-  <circle cx="903" cy="358" r="5" fill="rgba(60,70,90,.2)" stroke="#3a4a5a" stroke-width="1.5"/>
-  <text x="903" y="374" text-anchor="middle" font-size="8" fill="#3a4a5a">GND</text>
-
-  <!-- 12V+ → Buck IN+ -->
-  <path d="M837,358 L645,358" fill="none" stroke="#ff2255" stroke-width="2" stroke-linejoin="round"/>
-
-  <!-- GND rail line -->
-  <line x1="20" y1="400" x2="1080" y2="400" stroke="#2a3a4a" stroke-width="2.5"/>
-  <text x="540" y="413" text-anchor="middle" font-size="7" fill="#162040" letter-spacing="2">GND RAIL</text>
-
-  <!-- Buck IN−, E2 GND, BC Emitter, BAT− → GND rail -->
-  <line x1="645" y1="372" x2="645" y2="400" stroke="#2a3a4a" stroke-width="1.5" stroke-dasharray="3,3"/>
-  <line x1="490" y1="135" x2="490" y2="400" stroke="#2a3a4a" stroke-width="1.5" stroke-dasharray="3,3"/>
-  <line x1="740" y1="302" x2="740" y2="400" stroke="#2a3a4a" stroke-width="1.5" stroke-dasharray="3,3"/>
-  <line x1="903" y1="358" x2="903" y2="400" stroke="#2a3a4a" stroke-width="1.5" stroke-dasharray="3,3"/>
-
-  <!-- Zone labels -->
-  <rect x="20" y="2" width="320" height="12" rx="2" fill="rgba(0,170,255,.06)"/>
-  <text x="180" y="11" text-anchor="middle" font-size="7" fill="#003366" letter-spacing="1">NOKIA SIDE (3.7V LI-ION)</text>
-  <rect x="490" y="2" width="590" height="12" rx="2" fill="rgba(255,122,0,.05)"/>
-  <text x="785" y="11" text-anchor="middle" font-size="7" fill="#553300" letter-spacing="1">XE MÁY SIDE (12V → 5V BUCK)</text>
-
-  <!-- Tụ điện C1 near E1 -->
-  <line x1="240" y1="355" x2="240" y2="365" stroke="#2a3a4a" stroke-width="1.5"/>
-  <rect x="232" y="365" width="16" height="6" rx="1" fill="#111" stroke="#334466" stroke-width="1"/>
-  <rect x="232" y="374" width="16" height="6" rx="1" fill="#111" stroke="#334466" stroke-width="1"/>
-  <line x1="240" y1="380" x2="240" y2="400" stroke="#2a3a4a" stroke-width="1.5" stroke-dasharray="3,3"/>
-  <line x1="220" y1="105" x2="220" y2="355" stroke="#2a3a4a" stroke-width=".8" stroke-dasharray="2,4" opacity=".4"/>
-  <line x1="240" y1="355" x2="220" y2="355" stroke="#2a3a4a" stroke-width="1"/>
-  <text x="256" y="373" font-size="7" fill="#224466">100µF</text>
-
-  <!-- Tụ điện C2 near E2 -->
-  <line x1="510" y1="355" x2="510" y2="365" stroke="#2a3a4a" stroke-width="1.5"/>
-  <rect x="502" y="365" width="16" height="6" rx="1" fill="#111" stroke="#334466" stroke-width="1"/>
-  <rect x="502" y="374" width="16" height="6" rx="1" fill="#111" stroke="#334466" stroke-width="1"/>
-  <line x1="510" y1="380" x2="510" y2="400" stroke="#2a3a4a" stroke-width="1.5" stroke-dasharray="3,3"/>
-  <line x1="490" y1="105" x2="490" y2="355" stroke="#2a3a4a" stroke-width=".8" stroke-dasharray="2,4" opacity=".4"/>
-  <line x1="510" y1="355" x2="490" y2="355" stroke="#2a3a4a" stroke-width="1"/>
-  <text x="526" y="373" font-size="7" fill="#224466">100µF</text>
-  `;
-}
-
-draw();
-drawWireDiagram();
+// Init
+buildNokia();
+buildMoto();
+drawSim();
 </script>
 </body>
 </html>
